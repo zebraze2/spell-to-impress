@@ -1,0 +1,1436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spell to Impress · Glam Doll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{--s:1}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{background:radial-gradient(130% 120% at 50% 45%,#5b2d4b 0%,#2c1526 58%,#1a0c16 100%)}
+  #stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;
+    transform:translate(-50%,-50%) scale(var(--s));
+    box-shadow:0 0 0 1px rgba(255,190,220,.18),0 18px 60px rgba(0,0,0,.5);
+    overflow:hidden;background:#f6ece4}
+  #game{display:block;width:1280px;height:720px}
+  #game text{font-family:'Fredoka','Baloo 2',system-ui,sans-serif}
+  #game text.sans{font-family:'Nunito',system-ui,sans-serif}
+
+  /* outfit layers: every clothing item is its own <g>, cross-faded by the root state */
+  .oA,.oB{transition:opacity .28s ease}
+  #game[data-outfit="a"] .oB,#game[data-outfit="b"] .oA{opacity:0}
+
+  /* twinkles */
+  .tw{transform-box:fill-box;transform-origin:center;animation:tw 3.2s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.15;transform:scale(.45) rotate(0deg)}45%{opacity:1;transform:scale(1) rotate(20deg)}60%{opacity:.9;transform:scale(.9) rotate(25deg)}}
+  .glint{transform-box:fill-box;transform-origin:center;animation:glint 2.4s ease-in-out infinite}
+  @keyframes glint{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1)}}
+
+  /* "Spell it!" highlight pulse + float */
+  .pulse{animation:pulse 1.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  .bob{animation:bob 3s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .bob2{animation:bob 3.6s ease-in-out .8s infinite}
+
+  /* candy button */
+  #btn{cursor:pointer;outline:none}
+  #btn .face{transition:transform .12s ease}
+  #btn:hover .face{transform:translateY(-1px)}
+  #btn:active .face{transform:translateY(2px)}
+  #btn:focus-visible .ring{opacity:1}
+
+  /* outfit-change sparkle burst */
+  #burst{opacity:0;pointer-events:none}
+  #burst.go{animation:burst .9s ease-out}
+  #burst.go .bs{animation:bs .9s ease-out both}
+  @keyframes burst{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+  .bs{transform-box:fill-box;transform-origin:center}
+  @keyframes bs{0%{transform:scale(.2) rotate(0)}50%{transform:scale(1.15) rotate(40deg)}100%{transform:scale(.6) rotate(80deg)}}
+  #flash{opacity:0;pointer-events:none}
+  #flash.go{animation:flash .9s ease-out}
+  @keyframes flash{0%{opacity:0}30%{opacity:.92}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="stage">
+<svg id="game" data-outfit="a" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spell to Impress dressing room mockup">
+<defs>
+  <!-- ===== filters ===== -->
+  <filter id="fSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="fSoft2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
+  <filter id="fSoft1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>
+  <filter id="fUi" x="-30%" y="-30%" width="160%" height="180%">
+    <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#8a2b5a" flood-opacity=".28"/>
+  </filter>
+  <filter id="fUiS" x="-30%" y="-30%" width="160%" height="180%">
+    <feDropShadow dx="0" dy="2" stdDeviation="1.6" flood-color="#6b2048" flood-opacity=".3"/>
+  </filter>
+  <filter id="fGlow" x="-60%" y="-60%" width="220%" height="220%">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="5" result="b"/>
+    <feFlood flood-color="#ff5fa8"/><feComposite in2="b" operator="in" result="g"/>
+    <feMerge><feMergeNode in="g"/><feMergeNode in="g"/></feMerge>
+  </filter>
+  <filter id="fRim" x="-20%" y="-20%" width="140%" height="140%">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/>
+    <feFlood flood-color="#fff"/><feComposite in2="d" operator="in"/>
+  </filter>
+
+  <!-- ===== player skin (warm light-medium), light from upper-left ===== -->
+  <radialGradient id="gFace" cx="38%" cy="40%" r="70%">
+    <stop offset="0" stop-color="#fde3cf"/><stop offset=".55" stop-color="#f6c9a7"/><stop offset="1" stop-color="#e5a882"/>
+  </radialGradient>
+  <linearGradient id="gSkinL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#fbdcc6"/><stop offset=".5" stop-color="#f2c3a0"/><stop offset="1" stop-color="#dc9d78"/>
+  </linearGradient>
+  <linearGradient id="gSkinT" x1="0" y1="0" x2="1" y2=".25">
+    <stop offset="0" stop-color="#fbdcc6"/><stop offset=".45" stop-color="#f3c6a3"/><stop offset="1" stop-color="#dea07a"/>
+  </linearGradient>
+  <linearGradient id="gNeckSh" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#b8704f" stop-opacity=".6"/><stop offset="1" stop-color="#b8704f" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="gBlush"><stop offset="0" stop-color="#ff6d8e" stop-opacity=".5"/><stop offset="1" stop-color="#ff6d8e" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gBlushR"><stop offset="0" stop-color="#ff5d86" stop-opacity=".45"/><stop offset="1" stop-color="#ff5d86" stop-opacity="0"/></radialGradient>
+
+  <!-- eyes -->
+  <radialGradient id="gIris" cx="50%" cy="62%" r="55%">
+    <stop offset="0" stop-color="#e2a96a"/><stop offset=".45" stop-color="#a2622f"/><stop offset=".85" stop-color="#5a3018"/><stop offset="1" stop-color="#2e170b"/>
+  </radialGradient>
+  <radialGradient id="gIrisR" cx="50%" cy="62%" r="55%">
+    <stop offset="0" stop-color="#d79a5c"/><stop offset=".45" stop-color="#7d4520"/><stop offset=".85" stop-color="#3d1f0f"/><stop offset="1" stop-color="#1e0e06"/>
+  </radialGradient>
+  <linearGradient id="gSclera" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d9c6c8"/><stop offset=".45" stop-color="#fbf5f4"/><stop offset="1" stop-color="#ffffff"/>
+  </linearGradient>
+  <linearGradient id="gLid" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#c9708a" stop-opacity=".55"/><stop offset="1" stop-color="#e6a0a8" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="gBrow" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#6b4030" stop-opacity=".7"/><stop offset=".35" stop-color="#3f2219"/><stop offset="1" stop-color="#3f2219"/>
+  </linearGradient>
+  <!-- lips -->
+  <linearGradient id="gLipU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2668d"/><stop offset="1" stop-color="#c2446d"/></linearGradient>
+  <linearGradient id="gLipL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9557f"/><stop offset=".55" stop-color="#ef7c9e"/><stop offset="1" stop-color="#e46a8f"/></linearGradient>
+
+  <!-- hair: dark brown -->
+  <linearGradient id="gHairB" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#5c3524"/><stop offset=".5" stop-color="#442617"/><stop offset="1" stop-color="#2b170e"/>
+  </linearGradient>
+  <linearGradient id="gHairF" x1="0" y1="0" x2="1" y2=".6">
+    <stop offset="0" stop-color="#7a4a31"/><stop offset=".45" stop-color="#55301f"/><stop offset="1" stop-color="#341c11"/>
+  </linearGradient>
+  <linearGradient id="gHairLock" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4d2b1c"/><stop offset=".5" stop-color="#6a3f28"/><stop offset="1" stop-color="#3a2014"/>
+  </linearGradient>
+  <linearGradient id="gSheen" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#d7a27c" stop-opacity="0"/><stop offset=".3" stop-color="#e8b996" stop-opacity=".85"/><stop offset=".6" stop-color="#c78a64" stop-opacity=".55"/><stop offset="1" stop-color="#b37a58" stop-opacity="0"/>
+  </linearGradient>
+
+  <!-- rival: deep brown skin, platinum hair, lavender dress -->
+  <radialGradient id="gFaceR" cx="38%" cy="40%" r="70%">
+    <stop offset="0" stop-color="#a5643f"/><stop offset=".6" stop-color="#874b2c"/><stop offset="1" stop-color="#6a3820"/>
+  </radialGradient>
+  <linearGradient id="gSkinRL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#a1613d"/><stop offset=".5" stop-color="#85492b"/><stop offset="1" stop-color="#65341d"/>
+  </linearGradient>
+  <linearGradient id="gHairP" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fffaf0"/><stop offset=".45" stop-color="#efe1c6"/><stop offset="1" stop-color="#c9b38e"/>
+  </linearGradient>
+  <linearGradient id="gHairPd" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#e7d6b6"/><stop offset="1" stop-color="#b59d78"/>
+  </linearGradient>
+  <linearGradient id="gLav" x1="0" y1="0" x2="1" y2=".4">
+    <stop offset="0" stop-color="#ecdcff"/><stop offset=".5" stop-color="#c9aef0"/><stop offset="1" stop-color="#a387d6"/>
+  </linearGradient>
+  <linearGradient id="gLavSk" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#e3d0fb"/><stop offset=".55" stop-color="#c3a5ec"/><stop offset="1" stop-color="#9c7dd0"/>
+  </linearGradient>
+
+  <!-- ===== outfit A: pink sundress, straw hat, Mary Janes, pearls ===== -->
+  <linearGradient id="gDress" x1="0" y1="0" x2="1" y2=".3">
+    <stop offset="0" stop-color="#ffd2e2"/><stop offset=".45" stop-color="#f9a9c6"/><stop offset="1" stop-color="#e5819f"/>
+  </linearGradient>
+  <linearGradient id="gSkirt" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#ffcfe0"/><stop offset=".4" stop-color="#f8a6c3"/><stop offset="1" stop-color="#e0799c"/>
+  </linearGradient>
+  <linearGradient id="gSkirtIn" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#e98aab"/><stop offset="1" stop-color="#c7648a"/>
+  </linearGradient>
+  <radialGradient id="gPuff" cx="35%" cy="30%" r="75%">
+    <stop offset="0" stop-color="#ffe3ee"/><stop offset=".55" stop-color="#f9aac8"/><stop offset="1" stop-color="#df7ea1"/>
+  </radialGradient>
+  <pattern id="pFlower" width="17" height="17" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+    <g transform="translate(4.5 4.5)" opacity=".95">
+      <circle cx="0" cy="-1.6" r="1.25" fill="#fff"/><circle cx="1.55" cy="-.5" r="1.25" fill="#fff"/><circle cx=".95" cy="1.3" r="1.25" fill="#fff"/><circle cx="-.95" cy="1.3" r="1.25" fill="#fff"/><circle cx="-1.55" cy="-.5" r="1.25" fill="#fff"/>
+      <circle r=".8" fill="#ffd56b"/>
+    </g>
+    <g transform="translate(12.8 12.2) scale(.8)" opacity=".9">
+      <circle cx="0" cy="-1.6" r="1.25" fill="#fff4f8"/><circle cx="1.55" cy="-.5" r="1.25" fill="#fff4f8"/><circle cx=".95" cy="1.3" r="1.25" fill="#fff4f8"/><circle cx="-.95" cy="1.3" r="1.25" fill="#fff4f8"/><circle cx="-1.55" cy="-.5" r="1.25" fill="#fff4f8"/>
+      <circle r=".8" fill="#ffc94f"/>
+    </g>
+    <ellipse cx="9.5" cy="6.5" rx="1.5" ry=".7" transform="rotate(-30 9.5 6.5)" fill="#8fd3b4" opacity=".9"/>
+    <ellipse cx="3.5" cy="12.8" rx="1.4" ry=".65" transform="rotate(35 3.5 12.8)" fill="#8fd3b4" opacity=".85"/>
+  </pattern>
+  <linearGradient id="gStraw" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fbedc8"/><stop offset=".5" stop-color="#ecd39b"/><stop offset="1" stop-color="#cfae6c"/>
+  </linearGradient>
+  <linearGradient id="gStrawUnder" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#d8b779"/><stop offset="1" stop-color="#b9955a"/>
+  </linearGradient>
+  <pattern id="pWeave" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+    <rect width="6" height="6" fill="none"/>
+    <path d="M0 1.5h3M3 4.5h3" stroke="#b48f50" stroke-width=".8" stroke-linecap="round" opacity=".55"/>
+    <path d="M1.5 3v3M4.5 0v3" stroke="#fff6dc" stroke-width=".7" stroke-linecap="round" opacity=".6"/>
+  </pattern>
+  <linearGradient id="gRibbon" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff9cc2"/><stop offset=".5" stop-color="#f06f9f"/><stop offset="1" stop-color="#d4507f"/>
+  </linearGradient>
+  <linearGradient id="gShoeW" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f3e9ee"/><stop offset="1" stop-color="#d6c3cd"/>
+  </linearGradient>
+  <radialGradient id="gPearl" cx="35%" cy="30%" r="70%">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f4ecec"/><stop offset="1" stop-color="#cdbdc4"/>
+  </radialGradient>
+
+  <!-- ===== outfit B: navy satin gown, tiara, gloves ===== -->
+  <linearGradient id="gNavy" x1="0" y1="0" x2="1" y2=".2">
+    <stop offset="0" stop-color="#4b5fa6"/><stop offset=".35" stop-color="#2c3b76"/><stop offset=".75" stop-color="#1d2756"/><stop offset="1" stop-color="#131a3e"/>
+  </linearGradient>
+  <linearGradient id="gNavyTier" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1a2350"/><stop offset=".35" stop-color="#2f3f80"/><stop offset=".7" stop-color="#25336b"/><stop offset="1" stop-color="#151c44"/>
+  </linearGradient>
+  <linearGradient id="gSatin" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#9fb2ee" stop-opacity="0"/><stop offset=".5" stop-color="#b9c8f7" stop-opacity=".75"/><stop offset="1" stop-color="#9fb2ee" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="gGlove" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#f1eef6"/><stop offset="1" stop-color="#c9c3d8"/>
+  </linearGradient>
+  <linearGradient id="gSilver" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#d9dde8"/><stop offset=".7" stop-color="#a9b0c4"/><stop offset="1" stop-color="#eef1f8"/>
+  </linearGradient>
+
+  <!-- ===== room ===== -->
+  <linearGradient id="gWall" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f1e4da"/><stop offset=".6" stop-color="#f6ece4"/><stop offset="1" stop-color="#efe1d6"/>
+  </linearGradient>
+  <linearGradient id="gPanel" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f8efe8"/><stop offset="1" stop-color="#f0e2d8"/>
+  </linearGradient>
+  <linearGradient id="gNiche" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d8bfc0"/><stop offset=".5" stop-color="#e3cfcd"/><stop offset="1" stop-color="#d9c2c1"/>
+  </linearGradient>
+  <linearGradient id="gCol" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#fffdfb"/><stop offset=".35" stop-color="#ffffff"/><stop offset=".75" stop-color="#ece2dc"/><stop offset="1" stop-color="#d8cbc4"/>
+  </linearGradient>
+  <linearGradient id="gShelf" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#f6efeb"/><stop offset="1" stop-color="#dccfc9"/>
+  </linearGradient>
+  <linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c79a77"/><stop offset=".35" stop-color="#b98762"/><stop offset="1" stop-color="#9d6c4b"/>
+  </linearGradient>
+  <linearGradient id="gFloorRefl" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff6ee" stop-opacity=".55"/><stop offset="1" stop-color="#fff6ee" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="gRug" cx="50%" cy="45%" r="55%">
+    <stop offset="0" stop-color="#ffd9e6"/><stop offset=".7" stop-color="#f7b4cb"/><stop offset="1" stop-color="#ee9bb8"/>
+  </radialGradient>
+  <linearGradient id="gBust" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#5a5058"/><stop offset=".35" stop-color="#3a3239"/><stop offset="1" stop-color="#211b20"/>
+  </linearGradient>
+  <linearGradient id="gBrass" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#f3dcae"/><stop offset=".5" stop-color="#d4b07a"/><stop offset="1" stop-color="#a8844f"/>
+  </linearGradient>
+  <linearGradient id="gLeaf" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#8fd0a2"/><stop offset=".5" stop-color="#4fa274"/><stop offset="1" stop-color="#2f7651"/>
+  </linearGradient>
+  <linearGradient id="gPot" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#f6eef0"/><stop offset="1" stop-color="#d2c0c6"/>
+  </linearGradient>
+  <radialGradient id="gSpot" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff8f2" stop-opacity=".9"/><stop offset="1" stop-color="#fff8f2" stop-opacity="0"/>
+  </radialGradient>
+  <pattern id="pDamask" width="64" height="84" patternUnits="userSpaceOnUse">
+    <g fill="#e9c9cf" opacity=".55">
+      <path d="M32 6c5 7 13 9 13 19s-8 14-13 21c-5-7-13-11-13-21S27 13 32 6z"/>
+      <path d="M32 16c2 4 6 6 6 10s-4 6-6 9c-2-3-6-5-6-9s4-6 6-10z" fill="#f6ece4"/>
+      <path d="M14 52c6-1 10 3 10 8s-5 8-10 6c4-1 6-4 4-7s-6-3-8 0c-1-4 1-7 4-7zM50 52c-6-1-10 3-10 8s5 8 10 6c-4-1-6-4-4-7s6-3 8 0c1-4-1-7-4-7z"/>
+      <path d="M0 0c3 5 8 6 8 12S3 20 0 24c-3-4-8-6-8-12S-3 5 0 0zM64 0c3 5 8 6 8 12s-5 8-8 12c-3-4-8-6-8-12s5-7 8-12z" transform="translate(0 50)"/>
+      <circle cx="32" cy="70" r="3"/>
+    </g>
+  </pattern>
+  <linearGradient id="gBanner" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff9fcb"/><stop offset=".5" stop-color="#ff74b1"/><stop offset="1" stop-color="#ee4f98"/>
+  </linearGradient>
+  <linearGradient id="gBannerDk" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e5589b"/><stop offset="1" stop-color="#c23a7c"/>
+  </linearGradient>
+  <linearGradient id="gGloss" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity=".05"/>
+  </linearGradient>
+  <linearGradient id="gBtn" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff9ccb"/><stop offset=".55" stop-color="#ff63a8"/><stop offset="1" stop-color="#e93f8e"/>
+  </linearGradient>
+  <radialGradient id="gHeart" cx="40%" cy="35%" r="70%">
+    <stop offset="0" stop-color="#ffb3d6"/><stop offset=".6" stop-color="#ff6fb0"/><stop offset="1" stop-color="#e8458f"/>
+  </radialGradient>
+  <radialGradient id="gHalo" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#ff8cc2" stop-opacity=".55"/><stop offset=".6" stop-color="#ffb2d5" stop-opacity=".25"/><stop offset="1" stop-color="#ffb2d5" stop-opacity="0"/>
+  </radialGradient>
+
+  <!-- sparkle star -->
+  <path id="spk" d="M0-10C1-3 3-1 10 0 3 1 1 3 0 10-1 3-3 1-10 0-3-1-1-3 0-10z"/>
+  <!-- padlock badge -->
+  <g id="lock">
+    <circle r="9.5" fill="#fff" stroke="#f4a9c8" stroke-width="1.4"/>
+    <path d="M-3.4-1.2v-2.2a3.4 3.4 0 0 1 6.8 0v2.2" fill="none" stroke="#d94f8e" stroke-width="1.7" stroke-linecap="round"/>
+    <rect x="-4.8" y="-1.6" width="9.6" height="7" rx="1.8" fill="#ec5f9e"/>
+    <circle cy="1.6" r="1.1" fill="#fff"/>
+  </g>
+</defs>
+<defs>
+  <linearGradient id="gShadeX" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#fff" stop-opacity=".4"/><stop offset=".38" stop-color="#fff" stop-opacity="0"/>
+    <stop offset=".58" stop-color="#3a1830" stop-opacity="0"/><stop offset="1" stop-color="#3a1830" stop-opacity=".3"/>
+  </linearGradient>
+  <linearGradient id="gShadeY" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#3a1830" stop-opacity=".25"/>
+  </linearGradient>
+  <linearGradient id="gArchSh" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8e6468" stop-opacity=".32"/><stop offset="1" stop-color="#8e6468" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="gWallLight" x1="0" y1="0" x2="1" y2=".55">
+    <stop offset="0" stop-color="#fffaf4" stop-opacity=".75"/><stop offset=".45" stop-color="#fffaf4" stop-opacity="0"/><stop offset="1" stop-color="#b89c92" stop-opacity=".12"/>
+  </linearGradient>
+
+  <!-- white fluted column -->
+  <g id="column">
+    <rect x="0" y="44" width="42" height="410" fill="url(#gCol)"/>
+    <path d="M8 56V442M15 56V442M22 56V442M29 56V442M35 56V442" stroke="#e3d6cf" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M10 56V442M17 56V442M24 56V442" stroke="#fff" stroke-width="1" opacity=".9"/>
+    <rect x="-7" y="26" width="56" height="9" rx="2" fill="#fffdfa"/>
+    <rect x="-7" y="33" width="56" height="3" fill="#e6d9d1"/>
+    <path d="M-3 36h48l-4 10H1z" fill="#f7f0eb"/>
+    <circle cx="1" cy="40" r="5" fill="#fffdfa" stroke="#e3d6cf" stroke-width="1.2"/>
+    <circle cx="41" cy="40" r="5" fill="#f3ebe6" stroke="#dccfc8" stroke-width="1.2"/>
+    <rect x="-4" y="452" width="50" height="8" rx="2" fill="#fbf6f2"/>
+    <rect x="-8" y="459" width="58" height="37" rx="2" fill="url(#gCol)"/>
+    <rect x="-8" y="459" width="58" height="3" fill="#e9ddd6"/>
+  </g>
+
+  <!-- arched niche with shelves (246 wide) -->
+  <g id="niche">
+    <path d="M-6 496V128C-6 86 56 54 123 54S252 86 252 128V496Z" fill="#fbf7f3"/>
+    <path d="M-6 128C-6 86 56 54 123 54S252 86 252 128" fill="none" stroke="#e8dcd4" stroke-width="2"/>
+    <path d="M8 470V132C8 98 62 70 123 70S238 98 238 132V470Z" fill="url(#gNiche)"/>
+    <path d="M8 470V132C8 98 62 70 123 70S238 98 238 132V470Z" fill="url(#pDamask)" opacity=".35"/>
+    <path d="M8 200V132C8 98 62 70 123 70S238 98 238 132V200Z" fill="url(#gArchSh)"/>
+    <path d="M8 132V470" stroke="#b99a9a" stroke-width="5" opacity=".25"/>
+    <path d="M118 62h10l-2 12h-6z" fill="#f0e6df"/>
+    <g fill="url(#gShelf)">
+      <rect x="8" y="212" width="230" height="9"/><rect x="8" y="302" width="230" height="9"/><rect x="8" y="392" width="230" height="9"/>
+    </g>
+    <g fill="#5d3b40" opacity=".13"><rect x="8" y="221" width="230" height="6"/><rect x="8" y="311" width="230" height="6"/><rect x="8" y="401" width="230" height="6"/></g>
+    <rect x="8" y="401" width="230" height="69" fill="#f8f2ee"/>
+    <rect x="18" y="410" width="101" height="50" rx="3" fill="none" stroke="#e5d8d1" stroke-width="2"/>
+    <rect x="127" y="410" width="101" height="50" rx="3" fill="none" stroke="#e5d8d1" stroke-width="2"/>
+    <circle cx="105" cy="435" r="3" fill="url(#gBrass)"/><circle cx="141" cy="435" r="3" fill="url(#gBrass)"/>
+    <rect x="-6" y="470" width="258" height="26" fill="#fbf7f3"/><rect x="-6" y="470" width="258" height="3" fill="#e6d9d1"/>
+  </g>
+
+  <!-- mannequin bust (origin = base centre) -->
+  <g id="bust">
+    <ellipse cx="0" cy="-2.5" rx="13" ry="3.4" fill="url(#gBrass)"/>
+    <rect x="-1.7" y="-36" width="3.4" height="34" fill="url(#gBrass)"/>
+    <path d="M-12-35C-14-44-16-52-17-60S-20-70-21-74.5C-21-79.5-16-82.5-9-83.5L-5-84.5V-91C-5-94 5-94 5-91V-84.5L9-83.5C16-82.5 21-79.5 21-74.5C20-70 18-68 17-60S14-44 12-35C5-33-5-33-12-35Z" fill="url(#gBust)"/>
+    <ellipse cx="0" cy="-91.5" rx="5" ry="1.7" fill="#77696f"/>
+  </g>
+  <path id="sTop" d="M-8.5-83.5C-15-82.5-20.5-79.5-21.5-74.5C-20.5-69-18.5-66-17.5-59C-16.5-51-15-44-13.5-37C-6-35 6-35 13.5-37C15-44 16.5-51 17.5-59C18.5-66 20.5-69 21.5-74.5C20.5-79.5 15-82.5 8.5-83.5C5-79-5-79-8.5-83.5Z"/>
+  <g id="topBlouse">
+    <use href="#sTop" fill="currentColor"/>
+    <ellipse cx="-22.5" cy="-73.5" rx="8" ry="7" fill="currentColor"/><ellipse cx="22.5" cy="-73.5" rx="8" ry="7" fill="currentColor"/>
+    <ellipse cx="22.5" cy="-73.5" rx="8" ry="7" fill="#3a1830" opacity=".16"/>
+    <ellipse cx="-24.5" cy="-76" rx="3.6" ry="2.4" fill="#fff" opacity=".5"/>
+    <use href="#sTop" fill="url(#gShadeX)"/>
+    <path d="M-8.5-83.5C-9-78.5-5-75.5 0-77.5C-3-79.5-6-80.5-8.5-83.5ZM8.5-83.5C9-78.5 5-75.5 0-77.5C3-79.5 6-80.5 8.5-83.5Z" style="fill:var(--c2,#fff)"/>
+    <g style="fill:var(--c2,#fff)"><circle cy="-70" r="1.2"/><circle cy="-62" r="1.2"/><circle cy="-54" r="1.2"/><circle cy="-46" r="1.2"/></g>
+    <path d="M-17-38C-9-36 9-36 17-38" fill="none" stroke="#3a1830" stroke-opacity=".18" stroke-width="2"/>
+  </g>
+  <g id="topCami">
+    <path d="M-15-70C-12-64-6-62 0-63S12-64 15-70C16-60 15.5-46 13.5-37C6-35-6-35-13.5-37C-15.5-46-16-60-15-70Z" fill="currentColor"/>
+    <path d="M-15-70C-12-64-6-62 0-63S12-64 15-70C16-60 15.5-46 13.5-37C6-35-6-35-13.5-37C-15.5-46-16-60-15-70Z" fill="url(#gShadeX)"/>
+    <path d="M-14-70L-11-83M14-70L11-83" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M-15-70C-12-64-6-62 0-63S12-64 15-70" fill="none" style="stroke:var(--c2,#fff)" stroke-width="2" stroke-dasharray="1.5 1.5"/>
+    <path d="M-3-62.5l3 2 3-2-3 3.4z" style="fill:var(--c2,#fff)"/>
+  </g>
+  <g id="topCardi">
+    <path d="M-21-75C-25-60-26-46-25-34L-19-33C-19-46-18-58-17-66Z" fill="currentColor"/>
+    <path d="M21-75C25-60 26-46 25-34L19-33C19-46 18-58 17-66Z" fill="currentColor"/>
+    <path d="M21-75C25-60 26-46 25-34L19-33C19-46 18-58 17-66Z" fill="#3a1830" opacity=".2"/>
+    <use href="#sTop" fill="currentColor"/>
+    <use href="#sTop" fill="url(#gShadeX)"/>
+    <path d="M0-79V-36" style="stroke:var(--c2,#fff)" stroke-width="1.2" opacity=".8"/>
+    <g style="fill:var(--c2,#fff)"><circle cx="1.8" cy="-70" r="1.3"/><circle cx="1.8" cy="-61" r="1.3"/><circle cx="1.8" cy="-52" r="1.3"/><circle cx="1.8" cy="-43" r="1.3"/></g>
+    <path d="M-13-40h26" style="stroke:var(--c2,#fff)" stroke-width="2.4" opacity=".55"/>
+  </g>
+  <!-- hip form + skirts -->
+  <g id="hipForm">
+    <ellipse cx="0" cy="-2.5" rx="13" ry="3.4" fill="url(#gBrass)"/>
+    <rect x="-1.7" y="-40" width="3.4" height="38" fill="url(#gBrass)"/>
+    <path d="M-11-76C-12-68-15-60-16-52C-10-48 10-48 16-52C15-60 12-68 11-76C5-78-5-78-11-76Z" fill="url(#gBust)"/>
+  </g>
+  <g id="skirtA">
+    <path d="M-12-78C-6-80 6-80 12-78L24-44C12-39-12-39-24-44Z" fill="currentColor"/>
+    <path d="M-12-78C-6-80 6-80 12-78L24-44C12-39-12-39-24-44Z" fill="url(#gShadeX)"/>
+    <path d="M-5-75L-11-42M3-75L5-41M9-75L16-42" stroke="#3a1830" stroke-opacity=".18" stroke-width="1.5" fill="none"/>
+    <path d="M-12-78C-6-80 6-80 12-78V-74C6-76-6-76-12-74Z" style="fill:var(--c2,#fff)" opacity=".85"/>
+  </g>
+  <g id="skirtTutu">
+    <path d="M-12-78C-6-80 6-80 12-78C18-70 24-60 27-50C22-45 17-49 13-45C9-49 4-44 0-47C-4-44-9-49-13-45C-17-49-22-45-27-50C-24-60-18-70-12-78Z" fill="currentColor"/>
+    <path d="M-12-78C-6-80 6-80 12-78C18-70 24-60 27-50C22-45 17-49 13-45C9-49 4-44 0-47C-4-44-9-49-13-45C-17-49-22-45-27-50C-24-60-18-70-12-78Z" fill="url(#gShadeX)"/>
+    <path d="M-20-60C-12-56 12-56 20-60M-24-53C-14-50 14-50 24-53" stroke="#fff" stroke-opacity=".55" stroke-width="1.2" fill="none"/>
+    <path d="M-12-78C-6-80 6-80 12-78V-74C6-76-6-76-12-74Z" style="fill:var(--c2,#fff)"/>
+  </g>
+  <!-- folded stack -->
+  <g id="stack">
+    <rect x="-25" y="-14" width="50" height="13" rx="4" fill="currentColor"/>
+    <rect x="-25" y="-14" width="50" height="13" rx="4" fill="url(#gShadeY)"/>
+    <rect x="-24" y="-27" width="48" height="13" rx="4" style="fill:var(--c2,#fff)"/>
+    <rect x="-24" y="-27" width="48" height="13" rx="4" fill="url(#gShadeY)"/>
+    <rect x="-23" y="-40" width="46" height="13" rx="4" fill="currentColor"/>
+    <rect x="-23" y="-40" width="46" height="13" rx="4" fill="url(#gShadeY)"/>
+    <path d="M-15-34h30M-16-21h32M-17-8h34" stroke="#3a1830" stroke-opacity=".12" stroke-width="1.2"/>
+  </g>
+  <!-- shoes (profile) -->
+  <g id="heel">
+    <path d="M-14-1L-14-13C-11-15-7-12-4-9C1-6 8-6 12-4.5C15-3.5 16-1.5 15-0.5L-1-.5C-5-.5-8-3-11-4.5L-11-1Z" fill="currentColor"/>
+    <path d="M-14-1L-14-13C-11-15-7-12-4-9C1-6 8-6 12-4.5C15-3.5 16-1.5 15-0.5L-1-.5C-5-.5-8-3-11-4.5L-11-1Z" fill="url(#gShadeY)"/>
+    <path d="M-12-12C-8-11-6-8-3-7" stroke="#fff" stroke-opacity=".6" stroke-width="1" fill="none"/>
+  </g>
+  <g id="boot">
+    <path d="M-9-40H3C3-30 3-20 4-13C8-11 13-9 15-5C16-2 15 0 13 0H-4C-6 0-7-2-7-4L-9-4V0H-12V-6C-11-17-10-29-9-40Z" fill="currentColor"/>
+    <path d="M-9-40H3C3-30 3-20 4-13C8-11 13-9 15-5C16-2 15 0 13 0H-4C-6 0-7-2-7-4L-9-4V0H-12V-6C-11-17-10-29-9-40Z" fill="url(#gShadeX)"/>
+    <path d="M-6-38V-8" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+  </g>
+  <!-- hats on stands -->
+  <g id="hatStand">
+    <ellipse cx="0" cy="-2.5" rx="11" ry="3" fill="url(#gBrass)"/>
+    <rect x="-1.5" y="-30" width="3" height="28" fill="url(#gBrass)"/>
+    <ellipse cx="0" cy="-38" rx="10" ry="10" fill="url(#gBust)"/>
+  </g>
+  <g id="hatSun">
+    <ellipse cx="0" cy="-44" rx="30" ry="7" fill="currentColor"/>
+    <ellipse cx="0" cy="-44" rx="30" ry="7" fill="url(#gShadeY)"/>
+    <path d="M-13-45C-13-58-7-63 0-63S13-58 13-45C8-42-8-42-13-45Z" fill="currentColor"/>
+    <path d="M-13-45C-13-58-7-63 0-63S13-58 13-45C8-42-8-42-13-45Z" fill="url(#gShadeX)"/>
+    <path d="M-13-47C-8-44.5 8-44.5 13-47V-51C8-48.5-8-48.5-13-51Z" style="fill:var(--c2,#222)"/>
+  </g>
+  <g id="hatBeret">
+    <path d="M-20-44C-22-54-10-60 2-59C14-58 22-53 20-46C14-41-14-40-20-44Z" fill="currentColor"/>
+    <path d="M-20-44C-22-54-10-60 2-59C14-58 22-53 20-46C14-41-14-40-20-44Z" fill="url(#gShadeX)"/>
+    <path d="M1-59l1-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M-15-44C-6-42 6-42 15-44" stroke="#3a1830" stroke-opacity=".2" stroke-width="2" fill="none"/>
+  </g>
+  <g id="hatBucket">
+    <path d="M-22-38C-17-44-15-46-12-47C-12-56-7-60 0-60S12-56 12-47C15-46 17-44 22-38C10-35-10-35-22-38Z" fill="currentColor"/>
+    <path d="M-22-38C-17-44-15-46-12-47C-12-56-7-60 0-60S12-56 12-47C15-46 17-44 22-38C10-35-10-35-22-38Z" fill="url(#gShadeX)"/>
+    <path d="M-12-47C-6-45 6-45 12-47" stroke="#3a1830" stroke-opacity=".25" stroke-width="1.4" fill="none"/>
+  </g>
+  <!-- handbag -->
+  <g id="bag">
+    <path d="M-9-28C-9-38 9-38 9-28" fill="none" style="stroke:var(--c2,#c9a46a)" stroke-width="2.4"/>
+    <path d="M-17-26H17L19-3C19-1 18 0 16 0H-16C-18 0-19-1-19-3Z" fill="currentColor"/>
+    <path d="M-17-26H17L19-3C19-1 18 0 16 0H-16C-18 0-19-1-19-3Z" fill="url(#gShadeX)"/>
+    <path d="M-17-26H17L16-18C6-15-6-15-16-18Z" fill="#3a1830" opacity=".12"/>
+    <circle cx="0" cy="-17" r="2.2" style="fill:var(--c2,#c9a46a)"/>
+  </g>
+</defs>
+
+<!-- ================= ROOM ================= -->
+<g id="room">
+  <rect width="1280" height="500" fill="url(#gWall)"/>
+  <!-- centre wall panels with faint damask -->
+  <g>
+    <rect x="378" y="112" width="214" height="344" rx="3" fill="url(#gPanel)" stroke="#fffaf6" stroke-width="3"/>
+    <rect x="378" y="112" width="214" height="344" rx="3" fill="url(#pDamask)" opacity=".55"/>
+    <rect x="384" y="118" width="202" height="332" rx="2" fill="none" stroke="#e7d9cf" stroke-width="1.5"/>
+    <rect x="1220" y="112" width="60" height="344" fill="url(#pDamask)" opacity=".4"/>
+    <rect x="0" y="112" width="12" height="344" fill="url(#pDamask)" opacity=".4"/>
+  </g>
+  <!-- crown moulding -->
+  <rect width="1280" height="30" fill="#fbf7f3"/>
+  <rect y="30" width="1280" height="4" fill="#e7dbd3"/>
+  <path d="M0 22H1280" stroke="#ede2da" stroke-width="2"/>
+  <g fill="#efe5de"><path id="dent" d="M4 8h10v10H4z"/></g>
+  <!-- niches -->
+  <use href="#niche" x="68"/>
+  <use href="#niche" x="968"/>
+  <!-- centre niche (wider) -->
+  <g transform="translate(604 0)">
+    <path d="M-6 496V170C-6 136 66 106 146 106S298 136 298 170V496Z" fill="#fbf7f3"/>
+    <path d="M8 470V172C8 144 72 120 146 120S284 144 284 172V470Z" fill="url(#gNiche)"/>
+    <path d="M8 470V172C8 144 72 120 146 120S284 144 284 172V470Z" fill="url(#pDamask)" opacity=".35"/>
+    <path d="M8 240V172C8 144 72 120 146 120S284 144 284 172V240Z" fill="url(#gArchSh)"/>
+    <path d="M141 110h10l-2 12h-6z" fill="#f0e6df"/>
+    <g fill="url(#gShelf)"><rect x="8" y="244" width="276" height="9"/><rect x="8" y="334" width="276" height="9"/><rect x="8" y="414" width="276" height="9"/></g>
+    <g fill="#5d3b40" opacity=".13"><rect x="8" y="253" width="276" height="6"/><rect x="8" y="343" width="276" height="6"/><rect x="8" y="423" width="276" height="6"/></g>
+    <rect x="8" y="423" width="276" height="47" fill="#f8f2ee"/>
+    <rect x="-6" y="470" width="304" height="26" fill="#fbf7f3"/><rect x="-6" y="470" width="304" height="3" fill="#e6d9d1"/>
+  </g>
+  <!-- baseboard -->
+  <rect x="0" y="470" width="1280" height="26" fill="#fbf7f3" opacity=".0"/>
+  <rect x="364" y="462" width="234" height="34" fill="#fbf7f3"/><rect x="364" y="462" width="234" height="3" fill="#e6d9d1"/>
+  <rect x="0" y="462" width="62" height="34" fill="#fbf7f3"/><rect x="1220" y="462" width="60" height="34" fill="#fbf7f3"/>
+  <!-- columns -->
+  <use href="#column" x="16"/><use href="#column" x="322"/><use href="#column" x="916"/><use href="#column" x="1226"/>
+  <!-- soft daylight wash from upper left -->
+  <rect width="1280" height="500" fill="url(#gWallLight)"/>
+
+  <!-- floor -->
+  <rect y="496" width="1280" height="224" fill="url(#gFloor)"/>
+  <g id="planks" stroke="#7d4f34" stroke-opacity=".28" stroke-width="1.3"></g>
+  <g id="reflect" fill="url(#gFloorRefl)">
+    <rect x="12" y="497" width="50" height="70"/><rect x="318" y="497" width="50" height="70"/><rect x="912" y="497" width="50" height="70"/><rect x="1222" y="497" width="50" height="70"/>
+    <rect x="62" y="497" width="256" height="40" opacity=".5"/><rect x="598" y="497" width="314" height="40" opacity=".5"/><rect x="962" y="497" width="256" height="40" opacity=".5"/>
+  </g>
+  <rect y="496" width="1280" height="8" fill="#5b3524" opacity=".18"/>
+  <rect y="600" width="1280" height="120" fill="#5b3524" opacity=".0"/>
+</g>
+<!-- ================= SHELF ITEMS ================= -->
+<filter id="fItemSh" x="-10%" y="-10%" width="120%" height="120%">
+  <feDropShadow dx="3" dy="2" stdDeviation="2" flood-color="#5d3b40" flood-opacity=".22"/>
+</filter>
+<g id="items" filter="url(#fItemSh)">
+  <!-- niche L: tops on busts -->
+  <g transform="translate(120 212)"><use href="#bust"/><use href="#topBlouse" color="#fbf4ef" style="--c2:#f3b5cb"/></g>
+  <g transform="translate(191 212)"><use href="#bust"/><use href="#topCardi" color="#c9b6e8" style="--c2:#fff"/></g>
+  <!-- highlighted "Spell it!" item: mint blouse -->
+  <g id="target" transform="translate(262 212)">
+    <ellipse cx="0" cy="-56" rx="46" ry="52" fill="url(#gHalo)" class="pulse"/>
+    <use href="#topBlouse" color="#9fe0c6" style="--c2:#fff" filter="url(#fGlow)" class="pulse"/>
+    <use href="#bust"/>
+    <use href="#topBlouse" color="#a8e6cc" style="--c2:#fff"/>
+  </g>
+  <!-- niche L: skirts -->
+  <g transform="translate(120 302)"><use href="#hipForm"/><use href="#skirtTutu" color="#f7b8cf" style="--c2:#f7b8cf"/></g>
+  <g transform="translate(191 302)"><use href="#hipForm"/><use href="#skirtA" color="#f7f1ec" style="--c2:#ead9d0"/></g>
+  <g transform="translate(262 302)"><use href="#hipForm"/><use href="#skirtA" color="#9cb3d8" style="--c2:#8aa2c8"/></g>
+  <!-- niche L: folded stacks -->
+  <g transform="translate(120 392)"><use href="#stack" color="#f6c1d3" style="--c2:#fff3f6"/></g>
+  <g transform="translate(191 392)"><use href="#stack" color="#d9ccef" style="--c2:#f3eefb"/></g>
+  <g transform="translate(262 392)"><use href="#stack" color="#bfe6d6" style="--c2:#fbf3e6"/></g>
+
+  <!-- centre niche: hats -->
+  <g transform="translate(664 244)"><use href="#hatStand"/><use href="#hatBeret" color="#f59fbf"/></g>
+  <g transform="translate(750 244)"><use href="#hatStand"/><use href="#hatSun" color="#fbf6ef" style="--c2:#2b2328"/></g>
+  <g transform="translate(836 244)"><use href="#hatStand"/><use href="#hatBucket" color="#cdb8ee"/></g>
+  <!-- centre niche: bags -->
+  <g transform="translate(664 334)"><use href="#bag" color="#f7a9c6" style="--c2:#f3d9a8"/></g>
+  <g transform="translate(750 334)"><use href="#bag" color="#fbf5f0" style="--c2:#d7b47b"/></g>
+  <g transform="translate(836 334)"><use href="#bag" color="#e3c48f" style="--c2:#b48a4f"/>
+    <path d="M-17-20H17M-18-12H18M-18.5-5H18.5" stroke="#b48a4f" stroke-opacity=".5"/></g>
+  <!-- centre niche: shoe shelf -->
+  <g transform="translate(634 414)"><use href="#heel" color="#f58fb5" x="-6"/><use href="#heel" color="#f58fb5" x="8"/></g>
+  <g transform="translate(694 414)"><use href="#heel" color="#fbf7f3" x="-6"/><use href="#heel" color="#fbf7f3" x="8"/></g>
+  <g transform="translate(752 414)"><use href="#boot" color="#3a3138" x="-7"/><use href="#boot" color="#3a3138" x="9"/></g>
+  <g transform="translate(812 414)"><use href="#heel" color="#c9b4ec" x="-6"/><use href="#heel" color="#c9b4ec" x="8"/></g>
+  <g transform="translate(866 414)"><use href="#boot" color="#f2e9e2" x="-7"/><use href="#boot" color="#f2e9e2" x="9"/></g>
+
+  <!-- niche R -->
+  <g transform="translate(1020 212)"><use href="#bust"/><use href="#topCami" color="#f8c3d5" style="--c2:#fff"/></g>
+  <g transform="translate(1091 212)"><use href="#bust"/><use href="#topBlouse" color="#fdfaf6" style="--c2:#f19bbd"/></g>
+  <g transform="translate(1162 212)"><use href="#bust"/><use href="#topCardi" color="#f6d6a8" style="--c2:#fff"/></g>
+  <g transform="translate(1020 302)"><use href="#hipForm"/><use href="#skirtTutu" color="#d7c6f2" style="--c2:#d7c6f2"/></g>
+  <g transform="translate(1091 302)"><use href="#hipForm"/><use href="#skirtA" color="#f4a3c0" style="--c2:#e58aac"/></g>
+  <g transform="translate(1162 302)"><use href="#hipForm"/><use href="#skirtA" color="#2f2a33" style="--c2:#211d24"/></g>
+  <g transform="translate(1004 392)"><use href="#heel" color="#f58fb5" x="-6"/><use href="#heel" color="#f58fb5" x="8"/></g>
+  <g transform="translate(1058 392)"><use href="#boot" color="#fbf7f3" x="-7"/><use href="#boot" color="#fbf7f3" x="9"/></g>
+  <g transform="translate(1116 392)"><use href="#heel" color="#d9c3a3" x="-6"/><use href="#heel" color="#d9c3a3" x="8"/></g>
+  <g transform="translate(1172 392)"><use href="#boot" color="#4a3a44" x="-7"/><use href="#boot" color="#4a3a44" x="9"/></g>
+
+  <!-- lock badges -->
+  <use href="#lock" x="206" y="128"/>
+  <use href="#lock" x="680" y="306"/>
+  <use href="#lock" x="1178" y="128"/>
+</g>
+
+
+<!-- muted rose clusters on the arch keystones -->
+<defs>
+  <g id="rose"><circle r="6.2" fill="#efb3c6"/><circle r="4" fill="#f6c8d6"/><path d="M-2.6-.6a2.6 2.6 0 1 1 2.6 2.6a4.2 4.2 0 1 1-4.2-4.2" fill="none" stroke="#d98aa4" stroke-width="1.1"/></g>
+  <path id="rleaf" d="M0 0C4-4 10-4 13 0C9 4 3 4 0 0Z" fill="#a9cdb8"/>
+  <g id="roses">
+    <use href="#rleaf" transform="translate(-6 2) rotate(160)"/><use href="#rleaf" transform="translate(6 2) rotate(20)"/><use href="#rleaf" transform="translate(0 4) rotate(90)"/>
+    <use href="#rose" x="-9" y="0"/><use href="#rose" x="9" y="0"/><use href="#rose" transform="translate(0 -4) scale(1.15)"/>
+  </g>
+</defs>
+<use href="#roses" x="191" y="62"/>
+<use href="#roses" x="750" y="112"/>
+<use href="#roses" x="1091" y="62"/>
+
+<!-- wall sparkles -->
+<g id="wallSparkles" fill="#fff">
+  <g transform="translate(352 168) scale(.7)"><use href="#spk" class="tw" style="animation-delay:-.4s"/></g>
+  <g transform="translate(560 150) scale(.55)"><use href="#spk" class="tw" style="animation-delay:-1.6s"/></g>
+  <g transform="translate(905 132) scale(.8)"><use href="#spk" class="tw" style="animation-delay:-2.3s"/></g>
+  <g transform="translate(1250 300) scale(.6)"><use href="#spk" class="tw" style="animation-delay:-.9s"/></g>
+  <g transform="translate(38 260) scale(.65)"><use href="#spk" class="tw" style="animation-delay:-2.8s"/></g>
+  <g transform="translate(1000 120) scale(.5)"><use href="#spk" class="tw" style="animation-delay:-1.1s"/></g>
+  <g transform="translate(608 420) scale(.5)"><use href="#spk" class="tw" style="animation-delay:-2s"/></g>
+</g>
+
+<!-- soft key light behind the player so she pops -->
+<ellipse cx="470" cy="370" rx="230" ry="270" fill="url(#gSpot)" opacity=".55"/>
+<!-- rug -->
+<g id="rug">
+  <ellipse cx="474" cy="684" rx="222" ry="40" fill="#5c2f36" opacity=".28" filter="url(#fSoft)"/>
+  <g id="rugEdge" fill="#f3a3c0"></g>
+  <ellipse cx="470" cy="678" rx="216" ry="37" fill="#ee9bb8"/>
+  <ellipse cx="470" cy="676" rx="214" ry="35" fill="url(#gRug)"/>
+  <ellipse cx="470" cy="676" rx="198" ry="30" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <ellipse cx="470" cy="676" rx="150" ry="21" fill="none" stroke="#f39fbd" stroke-width="2.5" opacity=".7"/>
+  <ellipse cx="430" cy="668" rx="120" ry="12" fill="#fff" opacity=".22"/>
+</g>
+
+<!-- potted palm (fronds are generated in script) -->
+<g id="palm">
+  <ellipse cx="940" cy="553" rx="44" ry="8" fill="#5c2f36" opacity=".3" filter="url(#fSoft2)"/>
+  <g id="fronds"></g>
+  <path d="M906 500H974L966 548C965 552 962 554 958 554H922C918 554 915 552 914 548Z" fill="url(#gPot)"/>
+  <path d="M902 494H978V505H902Z" fill="#fffafa"/><path d="M902 503H978V506H902Z" fill="#dcc8cf"/>
+  <path d="M910 520H970" stroke="#f4b3c9" stroke-width="5"/>
+  <path d="M913 506C914 520 916 536 918 548" stroke="#fff" stroke-width="3" stroke-opacity=".8" fill="none"/>
+</g>
+
+<radialGradient id="gVig" cx="50%" cy="46%" r="75%">
+  <stop offset=".62" stop-color="#3a1830" stop-opacity="0"/><stop offset="1" stop-color="#3a1830" stop-opacity=".16"/>
+</radialGradient>
+<rect width="1280" height="720" fill="url(#gVig)" pointer-events="none"/>
+<!-- ================= RIVAL: Aria (3/4 view, reaching for a skirt on the shelf) ================= -->
+<g id="rival" transform="translate(1078 258) scale(.6)">
+  <defs>
+    <linearGradient id="gSkR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b0704a"/><stop offset=".45" stop-color="#8f5333"/><stop offset="1" stop-color="#6b3920"/>
+    </linearGradient>
+    <radialGradient id="gFaceR2" cx="45%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#b57650"/><stop offset=".6" stop-color="#93573a"/><stop offset="1" stop-color="#734026"/>
+    </radialGradient>
+    <linearGradient id="gLipR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b44a6c"/><stop offset="1" stop-color="#d9708f"/></linearGradient>
+    <linearGradient id="gPlat" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fffaf0"/><stop offset=".5" stop-color="#efe2c8"/><stop offset="1" stop-color="#cdb790"/>
+    </linearGradient>
+    <radialGradient id="gBun" cx="38%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#fffdf6"/><stop offset=".55" stop-color="#eee0c4"/><stop offset="1" stop-color="#c7af86"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="12" cy="512" rx="66" ry="10" fill="#4a2228" opacity=".34" filter="url(#fSoft2)"/>
+
+  <!-- back hair, falling down her back -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate" values="-.8 0 10;.8 0 10;-.8 0 10" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>
+    <path d="M-6 6C-36 10-52 40-52 80C-52 118-58 150-54 186C-50 222-42 246-30 266C-22 256-18 240-16 222C-12 248-4 258 2 262C4 236 0 210-2 186C-4 150 0 110 6 70Z" fill="url(#gPlat)"/>
+    <path d="M-44 70C-46 110-50 150-44 190S-36 240-28 258M-30 64C-32 110-34 160-28 200S-16 240-10 252" stroke="#c9b28a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".7"/>
+    <path d="M-38 90C-40 120-44 150-40 176" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>
+  </g>
+
+  <!-- legs: frilly socks + pink Mary Janes -->
+  <g>
+    <path d="M-23 340C-24 370-22 400-19 430C-17 450-13 470-12 490L2 490C2 470 4 450 4 430C4 400 1 370-1 340Z" fill="url(#gSkR)"/>
+    <path d="M7 340C9 360 13 378 19 394C26 412 29 444 28 484L40 484C42 450 39 414 36 394C33 376 32 356 31 340Z" fill="url(#gSkR)"/>
+    <path d="M18 392C22 396 28 397 33 394" stroke="#5a2e18" stroke-width="1.2" fill="none" opacity=".6"/>
+    <path d="M-12 472C-8 476-2 476 2 472L3 492H-11Z" fill="#fff"/><path d="M-13 473C-9 470-5 476-1 471C2 476 4 471 5 474" stroke="#f1dce6" stroke-width="2.4" fill="none"/>
+    <path d="M26 466C30 470 36 470 40 466L40 486H28Z" fill="#fff"/><path d="M25 467C29 464 33 470 37 465C40 470 42 465 43 468" stroke="#f1dce6" stroke-width="2.4" fill="none"/>
+    <path d="M-14 488C-14 482-10 480-4 481C4 482 12 486 17 492C18 497 15 499 11 499H-12C-15 499-15 495-14 488Z" fill="#f48fb4"/>
+    <path d="M24 482C24 476 29 474 34 475C42 476 51 480 56 486C57 491 54 493 50 493H26C24 493 23 489 24 482Z" fill="#f48fb4"/>
+    <path d="M-10 486C-4 484 4 485 9 489M28 480C34 478 43 479 48 483" stroke="#fff" stroke-width="2" fill="none" opacity=".75"/>
+    <path d="M-12 497H13M26 491H52" stroke="#c9587f" stroke-width="2.4"/>
+  </g>
+
+  <!-- dress body -->
+  <g>
+    <path d="M-30 182C-42 220-60 290-74 344C-50 356 50 360 80 346C66 290 44 220 26 182Z" fill="url(#gLav)"/>
+    <path d="M10 186C22 230 40 290 54 352C64 350 72 348 80 346C66 290 44 220 26 182Z" fill="#6c4fa6" opacity=".22"/>
+    <path d="M-18 190C-28 240-40 300-48 350M0 190C-2 240-6 300-8 356M14 190C22 240 30 300 36 356" stroke="#8b6dc7" stroke-opacity=".4" stroke-width="2.6" fill="none"/>
+    <path d="M-10 192C-18 240-28 300-34 352" stroke="#fff" stroke-opacity=".45" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- lace hem -->
+    <path d="M-74 344C-50 356 50 360 80 346L82 356C78 364 70 362 66 366C62 370 54 366 50 370C46 374 38 368 34 372C30 376 22 370 18 374C14 377 6 372 2 375C-2 378-10 372-14 375C-18 378-26 372-30 374C-34 376-42 370-46 372C-50 374-58 368-62 368C-66 368-72 364-76 356Z" fill="#fff"/>
+    <path d="M-70 358C-50 366 50 370 78 356" stroke="#e6dbf6" stroke-width="1.4" fill="none" stroke-dasharray="2 3"/>
+    <!-- bodice -->
+    <path d="M-40 130C-36 124-32 122-28 122C-18 128 0 140 12 142C20 138 26 128 32 122C38 126 40 136 38 146C36 160 30 172 26 182L-30 184C-34 172-40 158-40 146C-40 140-40 134-40 130Z" fill="url(#gLav)"/>
+    <path d="M-28 122C-18 128 0 140 12 142C20 138 26 128 32 122" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M-31 180C-10 186 10 186 27 180L27 188C10 194-10 194-31 188Z" fill="#f59cc0"/>
+    <!-- little bows -->
+    <g fill="#f58fb6">
+      <path d="M8 184c-7-7-15-6-15 0s8 6 15 0c7 6 15 6 15 0s-8-7-15 0z"/><path d="M6 186l-5 13 4-2 2 4 2-14zM10 186l4 13-4-2-1 4-1-14z"/>
+      <path d="M-44 336c-4-4-9-4-9 0s5 4 9 0c4 4 9 4 9 0s-5-4-9 0z"/>
+      <path d="M-2 342c-4-4-9-4-9 0s5 4 9 0c4 4 9 4 9 0s-5-4-9 0z"/>
+      <path d="M44 338c-4-4-9-4-9 0s5 4 9 0c4 4 9 4 9 0s-5-4-9 0z"/>
+      <path d="M-20 262c-3-3-7-3-7 0s4 3 7 0c3 3 7 3 7 0s-4-3-7 0z"/>
+      <path d="M24 270c-3-3-7-3-7 0s4 3 7 0c3 3 7 3 7 0s-4-3-7 0z"/>
+    </g>
+    <circle cx="8" cy="184" r="2.4" fill="#ffc2da"/>
+  </g>
+
+  <!-- near arm (relaxed) holding a tiny heart purse -->
+  <path d="M-46 122C-56 140-58 172-55 198C-52 222-47 246-45 262L-34 262C-34 246-38 222-40 198C-40 176-35 150-28 134Z" fill="url(#gSkR)"/>
+  <path d="M-45 260C-47 268-46 276-43 284C-42 288-38 288-38 284C-37 280-36 276-35 272C-34 268-34 264-34 260Z" fill="#9b5b38"/>
+  <path d="M-40 276C-46 286-46 296-40 300M-40 276C-32 284-30 294-34 300" stroke="#e2709c" stroke-width="1.8" fill="none"/>
+  <path d="M-37 322C-46 314-54 306-54 298C-54 292-49 288-44 289C-41 290-38 292-37 295C-36 292-33 290-30 289C-25 288-20 292-20 298C-20 306-28 314-37 322Z" fill="#f58fb6"/>
+  <ellipse cx="-46" cy="296" rx="3.2" ry="2" fill="#fff" opacity=".7"/>
+
+  <!-- far arm reaching up to the shelf -->
+  <path d="M24.2 117.8C45 104 62 88 79 71C88 54 98 34 106.2 16.2L113.8 19.8C106 38 97 58 89.5 77C88 81 85 82 82 81C66 98 50 116 35.8 130.2Z" fill="url(#gSkR)"/>
+  <path d="M82 74C90 58 98 40 106 22" stroke="#c48a62" stroke-width="2" fill="none" opacity=".55" stroke-linecap="round"/>
+  <path d="M106 17C105.5 12 106.5 7 109 3C111-1 113-6 115.5-10.5C117-13 120-12.5 120.5-10.5C121.6-12.4 124.4-12 124.6-9.6C124.8-7 123.4-3 122 .5C121 4 119 8.5 117.5 12C116.5 15 115 18.5 114 20Z" fill="#9c5c39"/>
+  <path d="M107.5 11C105 8 103 4 102 .5C101.6-1.2 103.4-2 104.4-.8C106.4 2 108.6 5 110 7.5Z" fill="#8f5233"/>
+  <path d="M117.6-3.5L115.6 4M120.6-5L118.8 2" stroke="#6b3920" stroke-width=".9" opacity=".6" stroke-linecap="round"/>
+  <!-- puff sleeves with lace trim -->
+  <path d="M-26 122C-36 114-52 116-56 128C-60 140-54 152-46 154C-42 150-36 150-30 152C-28 142-26 132-26 122Z" fill="url(#gLav)"/>
+  <path d="M-48 152C-42 148-36 148-30 151" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M24 116C32 108 46 110 50 120C53 128 50 136 44 138C40 134 34 134 30 134C28 128 26 122 24 116Z" fill="url(#gLav)"/>
+  <path d="M30 134C35 132 40 133 44 137" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <ellipse cx="-44" cy="126" rx="5" ry="3" fill="#fff" opacity=".55"/>
+
+  <!-- neck + head -->
+  <path d="M-4 80C-4 94-5 104-8 116C2 124 18 124 26 116C22 104 20 92 20 80Z" fill="#8a4f30"/>
+  <path d="M-4 84C4 98 14 100 20 86L20 96C12 104 2 104-4 98Z" fill="#4f2615" opacity=".4"/>
+  <g transform="rotate(-3 6 90)">
+    <path d="M-4 1C18 0 36 12 38 34C39.5 48 38.5 58 36 66C32.5 78 24 88 14 92.5C8 94.5 1 93-5 89C-17 81-28 68-31 52C-34 32-26 2-4 1Z" fill="url(#gFaceR2)"/>
+    <path d="M30 34C37 48 37 62 33 70C29 80 22 88 14 92C22 82 28 70 30 58C31 50 31 42 30 34Z" fill="#5e3019" opacity=".3"/>
+    <ellipse cx="-6" cy="61" rx="14" ry="9" fill="url(#gBlushR)" opacity=".7"/>
+    <ellipse cx="31" cy="60" rx="8" ry="7" fill="url(#gBlushR)" opacity=".7"/>
+    <ellipse cx="-12" cy="54" rx="6" ry="3" fill="#fff" opacity=".12"/>
+    <!-- near eye -->
+    <g transform="translate(3 48)"><g class="blinker">
+      <animateTransform attributeName="transform" type="scale" values="1 1;1 .08;1 1" keyTimes="0;.45;1" dur=".2s" begin="indefinite" fill="remove"/>
+      <g transform="translate(-3 -48)">
+        <path d="M-8 45C-6 39.5 2 37 8 38C11 38.6 13.5 40.5 14.5 42.5C10 39.5 4 39-1 40.5C-5 42-7 43.5-8 45Z" fill="#7a3d4f" opacity=".4"/>
+        <path d="M13 48.5C10.5 42.5 3 39.5-2.5 40.5C-5.5 41-7.5 43-8.5 44.5C-6 49-1 52.3 5 52.3C9 52.3 11.5 50.8 13 48.5Z" fill="url(#gSclera)"/>
+        <clipPath id="cEyeRN"><path d="M13 48.5C10.5 42.5 3 39.5-2.5 40.5C-5.5 41-7.5 43-8.5 44.5C-6 49-1 52.3 5 52.3C9 52.3 11.5 50.8 13 48.5Z"/></clipPath>
+        <g clip-path="url(#cEyeRN)"><circle cx="5.4" cy="45" r="6.2" fill="url(#gIrisR)"/><circle cx="5.6" cy="45.2" r="2.7" fill="#120804"/></g>
+        <circle cx="3.4" cy="42.9" r="1.8" fill="#fff"/><circle cx="7.8" cy="47.2" r=".9" fill="#fff"/>
+        <path d="M13.5 48.8C11 42 3.5 38.6-2.6 39.6C-6.5 40.2-9 42.4-10.5 43.6L-14.5 41.2C-12.5 44-10.5 45.6-8.8 46C-6.8 43.6-4.6 42.3-2.3 42C3.2 41.4 9.5 44 12.4 49.2Z" fill="#160a06"/>
+        <path d="M-9 43.6l-4.6-3.4M-7 41.8l-3.4-4.4M-4.5 40.6l-2-4.8" stroke="#160a06" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M10 50.6C6 52.8-1 52.6-7.5 46.5" stroke="#2a130a" stroke-width=".9" fill="none" opacity=".5"/>
+      </g>
+    </g></g>
+    <!-- far eye (foreshortened) -->
+    <g transform="translate(29 47)"><g class="blinker">
+      <animateTransform attributeName="transform" type="scale" values="1 1;1 .08;1 1" keyTimes="0;.45;1" dur=".2s" begin="indefinite" fill="remove"/>
+      <g transform="translate(-29 -47)">
+        <path d="M22 47.6C23.4 43 27.4 40.6 31 41C33 41.3 34.6 43 35.4 44.4C34 48.5 31.4 51 28.2 51C25.4 51 23.4 49.6 22 47.6Z" fill="url(#gSclera)"/>
+        <clipPath id="cEyeRF"><path d="M22 47.6C23.4 43 27.4 40.6 31 41C33 41.3 34.6 43 35.4 44.4C34 48.5 31.4 51 28.2 51C25.4 51 23.4 49.6 22 47.6Z"/></clipPath>
+        <g clip-path="url(#cEyeRF)"><circle cx="30.4" cy="44.9" r="4.8" fill="url(#gIrisR)"/><circle cx="30.6" cy="45.1" r="2.1" fill="#120804"/></g>
+        <circle cx="29" cy="43.2" r="1.3" fill="#fff"/>
+        <path d="M21.4 47.8C22.8 42.6 27 39.4 31 40C33.6 40.4 35.6 42.4 36.8 43.6L40 41.4C38.6 44 37 45.4 35.6 46C34.4 43.6 32.8 42.6 31 42.4C27 42 23.6 44.4 22.2 48.2Z" fill="#160a06"/>
+        <path d="M36.4 43.4l3.4-3.6M34.6 41.8l2.2-4" stroke="#160a06" stroke-width="1" stroke-linecap="round"/>
+      </g>
+    </g></g>
+    <!-- brows -->
+    <path d="M14 36.5C10 33 2 30.6-4 31C-8 31.3-11 33-13 35C-9.8 33.8-6.6 33.4-3.6 33.6C2.5 34 8.6 35.8 13.2 38Z" fill="#2a160d"/>
+    <path d="M22.5 36.6C25.5 33.4 30 32 34 32.4C36 32.6 37.4 33.6 38.4 34.8C36.8 34.2 35 34 33.4 34.2C29.6 34.6 26.2 35.8 23.4 37.8Z" fill="#2a160d"/>
+    <!-- nose -->
+    <path d="M19.5 49C20.8 53 21.8 57 22.2 60.6" stroke="#5a2c17" stroke-width="1.1" fill="none" opacity=".45" stroke-linecap="round"/>
+    <path d="M15.6 62.4C17.6 64.4 21.6 64.6 24.2 62.2" stroke="#4a2212" stroke-width="1.3" fill="none" opacity=".55" stroke-linecap="round"/>
+    <ellipse cx="20" cy="59.4" rx="1.5" ry="1.1" fill="#d39b78" opacity=".8"/>
+    <!-- lips -->
+    <path d="M8 74C11 71.5 14 69.6 16.6 70C17.6 70.2 18.2 70.8 18.6 71C19 70.8 19.6 70.2 20.6 70C23 69.8 25.2 71.6 27 74C24 74.6 21.6 74.4 18.8 74.9C15.6 74.4 11.6 74.6 8 74Z" fill="#a8405f"/>
+    <path d="M8 74C11.6 74.6 15.6 74.4 18.8 74.9C21.6 74.4 24 74.6 27 74C25.6 78.4 22.4 81 18 81.1C13.4 81 9.6 78.4 8 74Z" fill="url(#gLipR)"/>
+    <ellipse cx="16.4" cy="77.4" rx="3.2" ry="1.1" fill="#fff" opacity=".7"/>
+    <!-- hair: cap, face-framing lock, space buns, bow -->
+    <circle cx="-16" cy="-4" r="19" fill="url(#gBun)"/>
+    <circle cx="25" cy="-9" r="15.5" fill="url(#gBun)"/>
+    <path d="M-30-6C-27-16-16-20-7-15M-26 3C-20-8-9-9-3-3M-22-12C-17-16-11-15-8-11M14-14C19-21 29-22 35-15M16-4C21-11 29-11 33-6" stroke="#cdb48b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-22" cy="-12" rx="5" ry="3" fill="#fff" opacity=".7" transform="rotate(-30 -22 -12)"/>
+    <path d="M-34 44C-37 20-24 1-2 0C20-1 35 9 40 28C33 18 23 12 12 12C20 17 23 24 24 30C16 20 6 16-4 16C-16 17-25 28-29 44C-31 58-32 70-35 80C-37 66-35 54-34 44Z" fill="url(#gPlat)"/>
+    <path d="M-30 46C-34 84-34 124-26 162C-23 140-20 108-22 78Z" fill="url(#gPlat)"/>
+    <path d="M-6 6C-14 12-20 22-24 36M8 6C20 9 30 17 36 27" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85"/>
+    <path d="M-2 14C-12 20-20 32-24 48M-27 64C-30 90-29 120-26 150" stroke="#c9b28a" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>
+    <path d="M4-14c-8-8-18-8-18 0s10 8 18 0c8 8 18 8 18 0s-10-8-18 0z" fill="#f58fb6"/><circle cx="4" cy="-14" r="3.4" fill="#ffc2da"/>
+  </g>
+</g>
+<!-- ================= PLAYER DOLL (shared body + separate clothing layers) ================= -->
+<g id="player" transform="translate(470 686)">
+  <ellipse cx="10" cy="0" rx="62" ry="9" fill="#4a1f2c" opacity=".36" filter="url(#fSoft2)"/>
+  <ellipse cx="-4" cy="-1" rx="16" ry="3.6" fill="#3a1520" opacity=".45" filter="url(#fSoft1)"/>
+  <ellipse cx="40" cy="-2" rx="16" ry="3.4" fill="#3a1520" opacity=".4" filter="url(#fSoft1)"/>
+  <g id="breath">
+    <animateTransform attributeName="transform" type="scale" values="1 1;1.002 1.006;1 1" dur="4.2s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>
+  <g transform="translate(0 -510)">
+  <defs>
+    <!-- shared body shapes (clothing items are cut from these so they always fit) -->
+    <path id="legLs" d="M-40 236C-42 262-41 296-35 328C-30 348-22 362-20 376C-18 388-21 400-21 412C-21 432-15 456-10 476C-9 482-9 488-9 494L3 494C3 488 3.5 482 3 476C2 456 5 436 4 414C3.5 402 1.5 394 2 384C2.5 372 0 356-1 340C-2 310 0 284 2 266Z"/>
+    <path id="legRs" d="M40 244C41 274 38 306 32 334C27 352 20 364 19 378C18 390 22 400 26 412C31 428 34 450 35 470C36 478 37 484 38 490L27 492C26 486 25 480 24 474C20 454 12 434 9 418C6 408 4 398 4 388C4 374 6 356 6 340C6 312 4 286 2 266Z"/>
+    <path id="torsoS" d="M-12 104C-14 112-24 118-36 121C-44 123-50 128-50 136C-50 142-46 146-42 148C-38 160-34 172-30 182C-26 192-24 198-26 206C-30 218-40 228-42 240C-43 252-40 262-34 268L34 272C40 262 42 252 40 242C38 228 30 214 27 200C26 190 30 176 33 166C36 156 40 148 42 142C46 138 49 132 48 126C47 120 42 116 34 114C24 112 14 108 12 100Z"/>
+    <clipPath id="cLegs"><use href="#legLs"/><use href="#legRs"/></clipPath>
+    <linearGradient id="gLockB" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a341f"/><stop offset=".5" stop-color="#40241a"/><stop offset="1" stop-color="#28140b"/>
+    </linearGradient>
+    <linearGradient id="gLockF" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#734630"/><stop offset=".5" stop-color="#55311f"/><stop offset="1" stop-color="#361c10"/>
+    </linearGradient>
+    <linearGradient id="gLegShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".3" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#b86d4c" stop-opacity="0"/><stop offset="1" stop-color="#b86d4c" stop-opacity=".35"/>
+    </linearGradient>
+  </defs>
+
+  <!-- L1 hair (back layer): base mass + generated wavy locks -->
+  <g transform="rotate(2.5 0 92)">
+  <g id="hairBack">
+    <animateTransform attributeName="transform" type="rotate" values="-.9 0 4;.9 0 4;-.9 0 4" dur="5.5s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>
+    <path d="M0 0C26 0 44 16 48 44C52 74 48 100 52 128C56 156 50 180 54 206C58 232 52 254 54 272C46 284 36 288 26 284C16 290 6 292 0 288C-8 292-20 290-28 284C-38 288-50 282-54 270C-52 252-58 230-54 204C-50 178-56 154-52 128C-48 100-52 74-48 44C-44 16-26 0 0 0Z" fill="#2c170e"/>
+    <g id="hairBackLocks"></g>
+  </g>
+  </g>
+
+  <!-- L2 hat: back of brim (outfit A) -->
+  <g id="hatBack" class="oA" transform="rotate(2.5 0 92)">
+    <defs><radialGradient id="gBrimTop" cx="34%" cy="25%" r="80%"><stop offset="0" stop-color="#fdf1d0"/><stop offset=".55" stop-color="#edd5a0"/><stop offset="1" stop-color="#cfae6e"/></radialGradient></defs>
+    <path d="M-110 30C-112 4-66-24 0-27C66-29 112-6 110 24C102 20 66 15 0 15C-66 15-102 24-110 30Z" fill="url(#gBrimTop)"/>
+    <path d="M-110 30C-112 4-66-24 0-27C66-29 112-6 110 24C102 20 66 15 0 15C-66 15-102 24-110 30Z" fill="url(#pWeave)"/>
+    <path d="M-96 14C-74-6-34-16 8-17C48-18 82-8 98 8" fill="none" stroke="#fff6dc" stroke-width="2.2" opacity=".55"/>
+    <path d="M-110 30C-112 4-66-24 0-27C66-29 112-6 110 24" fill="none" stroke="#bd9757" stroke-width="2"/>
+  </g>
+
+  <!-- L3 legs (skin) -->
+  <g id="legs">
+    <use href="#legLs" fill="#f2c4a2" stroke="#d39272" stroke-width="1"/><use href="#legLs" fill="url(#gLegShade)"/>
+    <use href="#legRs" fill="#f0c09d" stroke="#d39272" stroke-width="1"/><use href="#legRs" fill="url(#gLegShade)"/>
+    <path d="M6 340C6 356 4 374 4 388C4 398 6 408 9 418" fill="none" stroke="#c9805e" stroke-width="1.1" opacity=".55"/>
+    <g fill="none" stroke="#c98463" stroke-linecap="round" opacity=".6">
+      <path d="M-17 382C-14 386-9 387-5 384" stroke-width="1.1"/>
+      <path d="M8 386C11 390 16 390 20 386" stroke-width="1.1"/>
+      <path d="M-9 478C-8 482-8 486-8 490M35 474C36 478 37 482 37 486" stroke-width=".9"/>
+    </g>
+    <path d="M-17 404C-18 424-14 446-10 466" stroke="#fff" stroke-opacity=".38" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M22 410C26 426 29 444 31 462" stroke="#fff" stroke-opacity=".3" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M-10 490C-12 496-15 503-14 507C-13 511-6 512 0 511C4 510 5 506 4 500C4 496 3 492 3 490Z" fill="#f0c09e"/>
+    <path d="M26 488C26 494 29 500 34 505C39 510 48 511 51 507C53 504 48 499 44 494C41 490 39 488 38 486Z" fill="#eab593"/>
+  </g>
+
+  <!-- L4 shoes: white Mary Janes (outfit A) -->
+  <g id="shoesA" class="oA">
+    <path d="M-11.5 492C-14 498-16.5 504-15.5 508.5C-14.5 512.5-6 513.5.5 512.5C5 511.5 6.5 507 5.5 501C5 497 4.5 494 4.5 491.5C0 494.5-7 494.5-11.5 492Z" fill="url(#gShoeW)" stroke="#cbb3c0" stroke-width=".8"/>
+    <path d="M-12 496C-6 498.5 0 498.5 5 496" stroke="#e5d3dc" stroke-width="2.6" fill="none"/>
+    <circle cx="4" cy="496.4" r="1.4" fill="#f39cbf"/>
+    <path d="M-15 507C-10 509.5-3 509.6 5 507.5" stroke="#cbb3c0" stroke-width="1.6" fill="none"/>
+    <ellipse cx="-10" cy="503.5" rx="2.6" ry="1.4" fill="#fff"/>
+    <path d="M25.5 496L25 506.5L29.6 507L30.2 499Z" fill="#e3d4dc"/>
+    <path d="M25 490C25 496 28 502 33.5 507C39 512 49 513 52.5 508.5C54.5 505 50 500 45.5 495C43 492 41 489.5 40 487.5C35 490.5 29 491 25 490Z" fill="url(#gShoeW)" stroke="#cbb3c0" stroke-width=".8"/>
+    <path d="M27 494C32 497 38 496.5 42 493" stroke="#e5d3dc" stroke-width="2.6" fill="none"/>
+    <circle cx="41.5" cy="493.4" r="1.4" fill="#f39cbf"/>
+    <path d="M35 508C40 511.5 47 512 52 509" stroke="#cbb3c0" stroke-width="1.6" fill="none"/>
+    <ellipse cx="38" cy="501" rx="2.2" ry="1.3" fill="#fff"/>
+  </g>
+
+  <!-- L5 torso (skin + neutral base slip so the bare doll stays dressed) -->
+  <g id="torso">
+    <path d="M-10 76C-10 88-10.5 96-12.5 106L12.5 104C10.5 94 10 86 10 76Z" fill="#efbd99" stroke="#d39272" stroke-width="1"/>
+    <use href="#torsoS" fill="url(#gSkinT)" stroke="#d39272" stroke-width="1"/>
+    <path d="M-10 84C-4 97 6 97 10 84L10 98C4 104-4 104-10 98Z" fill="url(#gNeckSh)"/>
+    <path d="M5 86C7 94 8 100 10 104" stroke="#c98463" stroke-width="1.4" opacity=".35" fill="none"/>
+    <path d="M-30 122C-22 119-14 119-7 121M8 119C15 117 23 117 31 119" stroke="#cf9270" stroke-width="1.2" fill="none" opacity=".5" stroke-linecap="round"/>
+    <path d="M-29 120C-21 117-14 117-8 119" stroke="#fff" stroke-width="1" fill="none" opacity=".45"/>
+    <path d="M-34 150C-20 156 20 156 34 148C34 190 30 230 34 268H-34C-40 230-38 190-34 150Z" fill="#f6dde3"/>
+  </g>
+  <!-- L6a sundress (outfit A) -->
+  <g id="dressA" class="oA">
+    <defs>
+      <path id="skirtAshape" d="M-26 202C-38 214-48 230-52 246C-62 286-82 330-98 370C-94 380-88 385-80 385C-72 385-67 378-62 377C-56 377-50 392-42 393C-34 394-27 383-22 383C-15 383-9 397-2 397C6 397 12 385 18 385C25 385 31 397 38 397C46 397 52 383 58 383C65 383 71 391 78 391C87 391 95 383 102 374C88 332 70 290 56 254C50 238 40 216 28 202Z"/>
+      <path id="bodiceAshape" d="M-46 134C-38 130-30 130-24 132C-24 140-22 146-18 149C-8 152 8 151 18 147C22 143 24 136 25 128C32 124 40 122 46 124C46 136 42 148 38 160C33 174 28 188 27 202L-25 204C-27 190-33 172-38 158C-42 150-46 142-46 134Z"/>
+      <clipPath id="cSkirtA"><use href="#skirtAshape"/></clipPath>
+      <clipPath id="cBodiceA"><use href="#bodiceAshape"/></clipPath>
+    </defs>
+    <!-- soft shadow the skirt casts on the legs -->
+    <path d="M-70 378C-30 398 30 402 84 384L84 410C30 424-30 420-70 402Z" fill="#8f4f3c" opacity=".42" filter="url(#fSoft2)" clip-path="url(#cLegs)"/>
+    <!-- lining seen under the back folds -->
+    <path d="M-96 372C-80 380-70 387-62 387C-52 387-32 392-22 392C-10 392 6 394 18 394C30 394 48 391 58 391C72 391 90 382 100 376L96 360H-92Z" fill="#d0628f"/>
+    <path d="M-96 372C-80 380-70 387-62 387C-52 387-32 392-22 392C-10 392 6 394 18 394C30 394 48 391 58 391C72 391 90 382 100 376" fill="none" stroke="#b84c7b" stroke-width="1.2"/>
+    <!-- skirt -->
+    <use href="#skirtAshape" fill="url(#gSkirt)"/>
+    <use href="#skirtAshape" fill="url(#pFlower)"/>
+    <g clip-path="url(#cSkirtA)">
+      <g fill="#a2386a" opacity=".32" filter="url(#fSoft1)">
+        <path d="M-15 210C-29.1 270-57.3 330-66 379L-58 379C-53.3 330-27.6 270-13.5 210Z"/>
+        <path d="M-5 210C-10.1 270-20.3 330-26 385L-18 385C-16.3 330-8.6 270-3.5 210Z"/>
+        <path d="M6 210C9.6 270 16.8 330 14 387L22 387C20.8 330 11.1 270 7.5 210Z"/>
+        <path d="M16 210C28.6 270 53.8 330 54 385L62 385C57.8 330 30.1 270 17.5 210Z"/>
+      </g>
+      <g fill="#fff" filter="url(#fSoft1)">
+        <path d="M-19.5 212C-31.5 270-58 330-84 383L-74 384C-50 330-27 270-17.5 212Z" opacity=".42"/>
+        <path d="M-10 212C-16 270-30 330-46 390L-37 391C-24 330-12 270-8 212Z" opacity=".34"/>
+        <path d="M0 212C0 270-1 330-5 395L3 395C4 330 2.5 270 2 212Z" opacity=".24"/>
+        <path d="M10 212C14 270 26 330 34 395L42 395C33 330 17 270 12 212Z" opacity=".14"/>
+        <path d="M20 212C32 270 56 330 74 389L82 388C63 330 35 270 22 212Z" opacity=".08"/>
+      </g>
+      <path d="M56 254C70 290 88 332 102 374L84 392C76 340 64 290 46 250Z" fill="#9c2f62" opacity=".2" filter="url(#fSoft2)"/>
+      <path d="M-26 202C-10 210 12 210 28 202L30 214C12 222-10 222-28 214Z" fill="#a2386a" opacity=".22" filter="url(#fSoft1)"/>
+    </g>
+    <path d="M-98 370C-94 380-88 385-80 385C-72 385-67 378-62 377C-56 377-50 392-42 393C-34 394-27 383-22 383C-15 383-9 397-2 397C6 397 12 385 18 385C25 385 31 397 38 397C46 397 52 383 58 383C65 383 71 391 78 391C87 391 95 383 102 374" fill="none" stroke="#fff" stroke-width="1.6" stroke-opacity=".75"/>
+    <!-- bodice -->
+    <use href="#bodiceAshape" fill="url(#gDress)"/>
+    <use href="#bodiceAshape" fill="url(#pFlower)"/>
+    <g clip-path="url(#cBodiceA)">
+      <path d="M14 150C24 168 26 188 25 204L40 204V140Z" fill="#a2386a" opacity=".22" filter="url(#fSoft1)"/>
+      <path d="M-30 156C-26 170-22 186-20 200" stroke="#fff" stroke-width="4" opacity=".35" fill="none" stroke-linecap="round" filter="url(#fSoft1)"/>
+      <path d="M-14 156C-14 172-12 188-11 202M12 155C13 171 13 187 13 202" stroke="#b9497a" stroke-width="1.1" opacity=".35" fill="none"/>
+    </g>
+    <path d="M-24 132C-24 140-22 146-18 149C-8 152 8 151 18 147C22 143 24 136 25 128" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    <!-- waist ribbon + bow -->
+    <path d="M-26 197C-10 201 12 199 28 195L28 205C12 209-10 211-26 207Z" fill="url(#gRibbon)"/>
+    <path d="M-24 199C-8 202 10 201 26 197" stroke="#fff" stroke-width="1" opacity=".55" fill="none"/>
+    <g transform="translate(-14 203)">
+      <path d="M-1 1L-7 17L-3 15L-1 19L1 2ZM1 1L6 16L2 14L1 18Z" fill="#e35f91"/>
+      <path d="M0 0C-8-8-18-8-18-1S-8 6 0 0Z" fill="url(#gRibbon)"/><path d="M0 0C8-8 18-8 18-1S8 6 0 0Z" fill="url(#gRibbon)"/>
+      <ellipse cx="0" cy="0" rx="3.4" ry="3" fill="#ff8db8"/>
+      <path d="M-15-3C-12-5-8-4-6-2M7-3C10-5 13-4 15-2" stroke="#fff" stroke-width="1.2" opacity=".75" fill="none"/>
+    </g>
+  </g>
+
+  <!-- L6b royal ball gown (outfit B): ruffle tiers are generated in script -->
+  <g id="gownB" class="oB">
+    <ellipse cx="4" cy="508" rx="140" ry="12" fill="#1c1430" opacity=".35" filter="url(#fSoft2)"/>
+    <g id="gownTiers"></g>
+    <path id="bodiceBs" d="M-44 138C-36 132-26 132-18 138C-12 142-5 145 0 140C5 145 12 142 18 136C26 130 36 130 44 134C42 148 38 162 33 176C29 188 28 196 28 206L-26 208C-28 196-33 180-37 166C-41 156-44 148-44 138Z" fill="url(#gNavy)"/>
+    <path d="M-33 148C-29 168-25 188-21 204" stroke="url(#gSatin)" stroke-width="8" fill="none" stroke-linecap="round" filter="url(#fSoft1)"/>
+    <path d="M-13 148C-11 168-9 188-8 204" stroke="#93a7ea" stroke-width="2" fill="none" opacity=".45" stroke-linecap="round"/>
+    <path d="M18 146C22 166 24 186 25 204" stroke="#0b112c" stroke-width="3" fill="none" opacity=".35"/>
+    <path d="M-44 138C-36 132-26 132-18 138C-12 142-5 145 0 140C5 145 12 142 18 136C26 130 36 130 44 134" fill="none" stroke="#b3c1f3" stroke-width="1.8" opacity=".9"/>
+    <path d="M-27 203C-10 208 12 207 29 201L29 210C12 216-10 217-27 212Z" fill="#141b40"/>
+    <g fill="#eef2ff"><circle cx="-18" cy="208" r="1.5"/><circle cx="-9" cy="210.5" r="1.7"/><circle cx="1" cy="211.2" r="1.9"/><circle cx="11" cy="209.6" r="1.7"/><circle cx="20" cy="206.8" r="1.5"/></g>
+  </g>
+  <!-- L7 pearl necklace (outfit A) -->
+  <g id="pearls" class="oA">
+    <path d="M-14 111C-6 124 6 124 14 109" fill="none" stroke="#d9c9cf" stroke-width=".6"/>
+    <g fill="url(#gPearl)">
+      <circle cx="-14" cy="111" r="2.1"/><circle cx="-11.2" cy="114.8" r="2.1"/><circle cx="-8.4" cy="117.6" r="2.1"/><circle cx="-5.6" cy="119.6" r="2.1"/><circle cx="-2.8" cy="120.8" r="2.1"/><circle cx="0" cy="121.2" r="2.5"/><circle cx="2.8" cy="120.4" r="2.1"/><circle cx="5.6" cy="118.8" r="2.1"/><circle cx="8.4" cy="116.4" r="2.1"/><circle cx="11.2" cy="113.2" r="2.1"/><circle cx="14" cy="109" r="2.1"/>
+    </g>
+  </g>
+
+  <!-- L8 arms (skin) -->
+  <defs>
+    <path id="armLs" d="M-38 118C-48 117-56 124-59 135C-63 152-72 168-82 182C-87 188-88 196-84 200C-76 208-64 218-53 228C-51 230-49 232-47 234L-40.5 225C-50 217-61 207-70 196C-69 188-63 172-55 158C-51 152-46 147-41 144Z"/>
+    <path id="handLs" d="M-47.5 233.5C-45 238-41.5 243-37.5 247.5C-35 250.5-32 253.5-29.5 254.5C-27 255.3-25.8 253.2-27 251.2C-28.8 248.4-30 245.6-31 242.6C-32 239-33.5 233.5-35.5 229.8C-37 227-39.5 225-41 225Z"/>
+    <path id="armRs" d="M37 116C46 114 53 120 55.5 129C59 148 62.5 170 64 192C64.6 197 64.8 201 64.4 205C63 222 60.5 240 58.6 256.3L49.4 255.7C50 240 51 222 51.6 206C51.8 201 51.8 197 51.4 194C49 176 44.5 158 39.5 146Z"/>
+    <path id="handRs" d="M49.6 255C48.2 262 48 268 49.6 274C50.8 279 52.4 284 54.4 288.4C55.4 290.6 57.8 290.4 58 288C58.2 285 58.8 282 60 279C61.2 276 61.6 270 60.8 264C60.2 260.5 59.2 257.5 58.8 255ZM50 263C47.4 266 46.4 270 47.2 273.6C47.7 275.2 49.1 274.8 49.5 273.2C49.9 270.6 50.6 268 51.6 265.6Z"/>
+    <clipPath id="cGloveL"><path d="M-116 128L-12 188L0 280H-130Z"/></clipPath>
+    <clipPath id="cGloveR"><path d="M20 168L90 172V300H20Z"/></clipPath>
+    <linearGradient id="gArm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fbdcc6"/><stop offset=".45" stop-color="#f3c5a2"/><stop offset="1" stop-color="#d9976f"/>
+    </linearGradient>
+  </defs>
+  <g id="arms">
+    <use href="#armLs" fill="url(#gArm)" stroke="#d08e6b" stroke-width="1"/>
+    <path d="M-62 150C-68 164-76 176-83 186" stroke="#fff" stroke-opacity=".35" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M-70 196C-62 204-54 212-46 222" stroke="#c07a58" stroke-opacity=".45" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M-85 193C-83 196-80 197-78 197" stroke="#c07a58" stroke-width="1" fill="none" opacity=".6"/>
+    <use href="#handLs" fill="#efbb97" stroke="#d08e6b" stroke-width=".9"/>
+    <path d="M-34.5 236L-29.5 248M-37 238.5L-32 250.5M-39.4 240.6L-35 251" stroke="#c98463" stroke-width=".8" opacity=".6"/>
+    <path d="M-41 227C-39 229-37.5 231-36.5 233" stroke="#fff" stroke-width="1.2" opacity=".5" fill="none"/>
+    <use href="#armRs" fill="url(#gArm)" stroke="#d08e6b" stroke-width="1"/>
+    <path d="M45 140C49 160 52 180 53 196" stroke="#fff" stroke-opacity=".32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M61.5 197C63 199.5 63.8 202 63.8 204.5" stroke="#c07a58" stroke-width="1" fill="none" opacity=".55"/>
+    <use href="#handRs" fill="#ebb58f" stroke="#d08e6b" stroke-width=".9"/>
+    <path d="M53.6 276L55 286M56.4 275L57.2 284" stroke="#c98463" stroke-width=".8" opacity=".6"/>
+  </g>
+
+  <!-- L9 long satin gloves (outfit B): cut from the arm shapes so they always fit -->
+  <g id="glovesB" class="oB">
+    <g clip-path="url(#cGloveL)"><use href="#armLs" fill="url(#gGlove)"/><use href="#handLs" fill="#f6f3fa"/></g>
+    <path d="M-80.5 148.5L-46 168.5" stroke="#dcd6ea" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M-34.5 236L-29.5 248M-37 238.5L-32 250.5M-39.4 240.6L-35 251M-66 202C-63 206-59 209-55 210M-75 172C-72 176-68 178-64 178" stroke="#bdb5d3" stroke-width=".9" fill="none"/>
+    <path d="M-64 160C-70 170-77 180-83 188" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <g clip-path="url(#cGloveR)"><use href="#armRs" fill="url(#gGlove)"/><use href="#handRs" fill="#f6f3fa"/></g>
+    <path d="M44.5 168.4L61.5 171.4" stroke="#dcd6ea" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M53.6 276L55 286M56.4 275L57.2 284M51 236C53.5 238.5 56.5 239.5 59.5 238.5M52.5 204C55.5 206.5 59.5 207.5 63.5 206.5" stroke="#bdb5d3" stroke-width=".9" fill="none"/>
+    <path d="M50 176C52 194 54 214 53.5 240" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- L10a puff sleeves (outfit A) -->
+  <g id="sleevesA" class="oA">
+    <path d="M-33 121C-42 110-62 114-68 128C-72 140-66 156-56 159C-51 155-44 155-38 157C-35 146-33 133-33 121Z" fill="url(#gPuff)"/>
+    <path d="M-33 121C-42 110-62 114-68 128C-72 140-66 156-56 159C-51 155-44 155-38 157C-35 146-33 133-33 121Z" fill="url(#pFlower)"/>
+    <path d="M-57 157C-51 153-44 153-38 155" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M-48 118C-55 130-55 145-51 155M-40 119C-44 131-44 144-42 155M-58 122C-63 134-62 146-58 156" stroke="#c45a86" stroke-width="1.1" opacity=".38" fill="none"/>
+    <ellipse cx="-57" cy="127" rx="5.5" ry="3.6" fill="#fff" opacity=".55"/>
+    <path d="M35 114C45 106 63 110 67 124C71 136 65 152 58 156C54 152 46 152 41 154C39 140 37 127 35 114Z" fill="url(#gPuff)"/>
+    <path d="M35 114C45 106 63 110 67 124C71 136 65 152 58 156C54 152 46 152 41 154C39 140 37 127 35 114Z" fill="url(#pFlower)"/>
+    <path d="M35 114C45 106 63 110 67 124C71 136 65 152 58 156C54 152 46 152 41 154C39 140 37 127 35 114Z" fill="#a83d6b" opacity=".15"/>
+    <path d="M41 154C47 151 53 151 58 155" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M47 112C54 124 56 139 54 151M56 114C62 126 62 139 60 149M41 116C45 128 46 141 45 152" stroke="#c45a86" stroke-width="1.1" opacity=".38" fill="none"/>
+    <ellipse cx="45" cy="117" rx="4.5" ry="3" fill="#fff" opacity=".45"/>
+  </g>
+
+  <!-- L10b off-shoulder satin ruffles (outfit B) -->
+  <g id="sleevesB" class="oB">
+    <path d="M-40 132C-50 124-66 127-71 138C-74 147-70 157-62 160C-60 155-54 154-50 158C-48 153-44 150-40 150C-41 144-41 138-40 132Z" fill="url(#gNavyTier)"/>
+    <path d="M-69 140C-66 148-60 150-56 146M-62 160C-61 154-57 151-52 152M-50 158C-48 153-45 151-41 150" stroke="#9fb3f0" stroke-width="1.6" fill="none" opacity=".75" stroke-linecap="round"/>
+    <path d="M-58 130C-64 134-67 140-67 146" stroke="#c9d4fa" stroke-width="2" fill="none" opacity=".6" stroke-linecap="round"/>
+    <path d="M40 128C50 120 66 123 71 134C74 143 70 153 62 156C60 151 54 150 50 154C48 149 44 146 40 146C41 140 41 134 40 128Z" fill="url(#gNavyTier)"/>
+    <path d="M69 136C66 144 60 146 56 142M62 156C61 150 57 147 52 148M50 154C48 149 45 147 41 146" stroke="#9fb3f0" stroke-width="1.6" fill="none" opacity=".55" stroke-linecap="round"/>
+  </g>
+  <!-- L11 head (face) + L12 front hair + L13 headwear, tilted together -->
+  <g id="headGroup" transform="rotate(2.5 0 92)">
+    <g id="face">
+      <path d="M0 0C22 0 37 13 37.5 35C38 52 36.5 62 32.5 71C27.5 81 15 90.5 6 92.6Q0 93.8-6 92.6C-15 90.5-27.5 81-32.5 71C-36.5 62-38 52-37.5 35C-37 13-22 0 0 0Z" fill="url(#gFace)" stroke="#d39272" stroke-width=".9"/>
+      <path d="M30 30C38 44 37 62 32 72C27 82 16 90 6 92.5C18 84 26 72 30 58C32 48 32 38 30 30Z" fill="#cf8d68" opacity=".35"/>
+      <path d="M-36 34C-20 18 20 16 38 32L38 40C20 26-20 26-36 42Z" fill="#b8775a" opacity=".22"/>
+      <!-- blush -->
+      <ellipse cx="-22" cy="61" rx="12.5" ry="7.5" fill="url(#gBlush)"/>
+      <ellipse cx="22" cy="61" rx="12.5" ry="7.5" fill="url(#gBlush)"/>
+      <ellipse cx="0" cy="58" rx="6" ry="3" fill="url(#gBlush)" opacity=".6"/>
+      <!-- brows -->
+      <path d="M5 36.6C8.6 32.4 15.6 28.8 22 28.6C26.4 28.5 30 30.6 31.8 33.6C28.8 31.9 25.6 31.3 22 31.5C16.5 31.8 10.2 34.4 6.2 38.2Z" fill="#4a2a1d"/>
+      <path d="M-5 36.6C-8.6 32.4-15.6 28.8-22 28.6C-26.4 28.5-30 30.6-31.8 33.6C-28.8 31.9-25.6 31.3-22 31.5C-16.5 31.8-10.2 34.4-6.2 38.2Z" fill="#4a2a1d"/>
+      <!-- right eye (viewer right) -->
+      <g transform="translate(17 49) scale(1.1)"><g class="blinker">
+        <animateTransform attributeName="transform" type="scale" values="1 1;1 .08;1 1" keyTimes="0;.45;1" dur=".2s" begin="indefinite" fill="remove"/>
+        <g transform="translate(-17 -49)">
+          <path d="M7.5 46C10 40 18 37 24 38C27 38.6 29.5 40.5 31 42.5C26 39.5 20 39 15 40.5C11 42 9 44 7.5 46Z" fill="#e48fa5" opacity=".45"/>
+          <path d="M9 40.5C13 36.5 21 35.2 27 38.8" stroke="#b47a68" stroke-width=".9" fill="none" opacity=".5"/>
+          <clipPath id="cEyeR"><path d="M7 48.5C9.5 42.5 17 39.5 22.5 40.5C25.5 41 27.5 43 28.5 44.5C26 49 21 52.3 15 52.3C11 52.3 8.5 50.8 7 48.5Z"/></clipPath>
+          <path d="M7 48.5C9.5 42.5 17 39.5 22.5 40.5C25.5 41 27.5 43 28.5 44.5C26 49 21 52.3 15 52.3C11 52.3 8.5 50.8 7 48.5Z" fill="url(#gSclera)"/>
+          <g clip-path="url(#cEyeR)">
+            <circle cx="17.2" cy="46.4" r="6.3" fill="url(#gIris)"/>
+            <circle cx="17.2" cy="46.4" r="6" fill="none" stroke="#2e170b" stroke-width=".9" opacity=".7"/>
+            <circle cx="17.2" cy="46.6" r="2.8" fill="#140904"/>
+            <path d="M8 40C14 38 22 38 28 42L28 45C22 41 14 41 8 44Z" fill="#5a2f22" opacity=".35"/>
+          </g>
+          <circle cx="15.1" cy="44.1" r="1.9" fill="#fff"/><circle cx="19.7" cy="48.7" r=".9" fill="#fff" opacity=".9"/>
+          <path d="M6.5 48.8C9 42 16.5 38.4 22.6 39.4C26.5 40 29.2 42 30.8 43.2L36.8 39.6C34.4 43.6 31.6 45.9 28.8 46.3C26.8 43.6 24.6 42.3 22.3 42C16.8 41.4 10.5 44 7.6 49.2Z" fill="#1d0f0b"/>
+          <path d="M24.2 40.2C25.4 38 26.2 35.8 26.4 33.6C26.9 36 26.8 38.4 26 40.8ZM27.2 41.2C29 39 30.2 36.6 30.6 34.4C30.8 37 30.2 39.6 28.8 42ZM29.8 42.4C32 40.8 33.8 38.6 34.8 36.4C34.6 39.2 33.2 41.6 31.2 43.4Z" fill="#1d0f0b"/>
+          <path d="M9.5 50.4C14 53 21 52.8 28 46.4" stroke="#3d1f14" stroke-width="1" fill="none" opacity=".75"/>
+          <path d="M25.4 49.6l1.8 2.4M23 50.8l1.1 2.5" stroke="#3d1f14" stroke-width=".7" stroke-linecap="round" opacity=".8"/>
+        </g>
+      </g></g>
+      <!-- left eye (viewer left) -->
+      <g transform="translate(-17 49) scale(1.1)"><g class="blinker">
+        <animateTransform attributeName="transform" type="scale" values="1 1;1 .08;1 1" keyTimes="0;.45;1" dur=".2s" begin="indefinite" fill="remove"/>
+        <g transform="translate(17 -49)">
+          <path d="M-7.5 46C-10 40-18 37-24 38C-27 38.6-29.5 40.5-31 42.5C-26 39.5-20 39-15 40.5C-11 42-9 44-7.5 46Z" fill="#e48fa5" opacity=".45"/>
+          <path d="M-9 40.5C-13 36.5-21 35.2-27 38.8" stroke="#b47a68" stroke-width=".9" fill="none" opacity=".5"/>
+          <clipPath id="cEyeL"><path d="M-7 48.5C-9.5 42.5-17 39.5-22.5 40.5C-25.5 41-27.5 43-28.5 44.5C-26 49-21 52.3-15 52.3C-11 52.3-8.5 50.8-7 48.5Z"/></clipPath>
+          <path d="M-7 48.5C-9.5 42.5-17 39.5-22.5 40.5C-25.5 41-27.5 43-28.5 44.5C-26 49-21 52.3-15 52.3C-11 52.3-8.5 50.8-7 48.5Z" fill="url(#gSclera)"/>
+          <g clip-path="url(#cEyeL)">
+            <circle cx="-17.2" cy="46.4" r="6.3" fill="url(#gIris)"/>
+            <circle cx="-17.2" cy="46.4" r="6" fill="none" stroke="#2e170b" stroke-width=".9" opacity=".7"/>
+            <circle cx="-17.2" cy="46.6" r="2.8" fill="#140904"/>
+            <path d="M-8 40C-14 38-22 38-28 42L-28 45C-22 41-14 41-8 44Z" fill="#5a2f22" opacity=".35"/>
+          </g>
+          <circle cx="-19.3" cy="44.1" r="1.9" fill="#fff"/><circle cx="-14.7" cy="48.7" r=".9" fill="#fff" opacity=".9"/>
+          <path d="M-6.5 48.8C-9 42-16.5 38.4-22.6 39.4C-26.5 40-29.2 42-30.8 43.2L-36.8 39.6C-34.4 43.6-31.6 45.9-28.8 46.3C-26.8 43.6-24.6 42.3-22.3 42C-16.8 41.4-10.5 44-7.6 49.2Z" fill="#1d0f0b"/>
+          <path d="M-24.2 40.2C-25.4 38-26.2 35.8-26.4 33.6C-26.9 36-26.8 38.4-26 40.8ZM-27.2 41.2C-29 39-30.2 36.6-30.6 34.4C-30.8 37-30.2 39.6-28.8 42ZM-29.8 42.4C-32 40.8-33.8 38.6-34.8 36.4C-34.6 39.2-33.2 41.6-31.2 43.4Z" fill="#1d0f0b"/>
+          <path d="M-9.5 50.4C-14 53-21 52.8-28 46.4" stroke="#3d1f14" stroke-width="1" fill="none" opacity=".75"/>
+          <path d="M-25.4 49.6l-1.8 2.4M-23 50.8l-1.1 2.5" stroke="#3d1f14" stroke-width=".7" stroke-linecap="round" opacity=".8"/>
+        </g>
+      </g></g>
+      <!-- nose -->
+      <path d="M3 50C3.6 54 4 57 3.8 60" stroke="#c98466" stroke-width="1.2" fill="none" opacity=".35" stroke-linecap="round"/>
+      <path d="M-4.6 62.4C-2.5 64.6 2.5 64.6 4.6 62.4" stroke="#b46e52" stroke-width="1.2" fill="none" opacity=".6" stroke-linecap="round"/>
+      <ellipse cx="-2.6" cy="62.6" rx="1.1" ry=".6" fill="#9c5a42" opacity=".45"/><ellipse cx="2.6" cy="62.6" rx="1.1" ry=".6" fill="#9c5a42" opacity=".45"/>
+      <ellipse cx="-.6" cy="59.8" rx="1.5" ry="1.1" fill="#fff" opacity=".7"/>
+      <path d="M-1 47V56" stroke="#fff" stroke-width="1.2" opacity=".3" stroke-linecap="round"/>
+      <!-- lips -->
+      <g transform="translate(0 75) scale(1.14) translate(0 -75)">
+      <path d="M-11 74C-8 71.5-5 69.2-2.2 69.6C-1 69.8-.4 70.6 0 70.8C.4 70.6 1 69.8 2.2 69.6C5 69.2 8 71.5 11 74C7 74.5 3 74.2 0 74.8C-3 74.2-7 74.5-11 74Z" fill="url(#gLipU)"/>
+      <path d="M-11 74C-7 74.6-3 74.4 0 74.9C3 74.4 7 74.6 11 74C9.5 78.5 5 81.2 0 81.3C-5 81.2-9.5 78.5-11 74Z" fill="url(#gLipL)"/>
+      <path d="M-11 74C-7 74.6-3 74.4 0 74.9C3 74.4 7 74.6 11 74" stroke="#8e2c4a" stroke-width=".9" fill="none"/>
+      <ellipse cx="-2.5" cy="77.4" rx="3.6" ry="1.2" fill="#fff" opacity=".75"/>
+      <ellipse cx="4.5" cy="77.8" rx="1.4" ry=".6" fill="#fff" opacity=".6"/>
+      <ellipse cx="-4" cy="71.6" rx="1.8" ry=".6" fill="#fff" opacity=".5"/>
+      </g>
+      <path d="M-5 83.5C-2 84.6 2 84.6 5 83.5" stroke="#c98466" stroke-width="1.2" fill="none" opacity=".35" stroke-linecap="round"/>
+    </g>
+
+    <g id="hairFront">
+      <animateTransform attributeName="transform" type="rotate" values="-.6 0 4;.6 0 4;-.6 0 4" dur="5.5s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>
+      <g id="hairFrontLocks"></g>
+      <!-- hair cap with a soft side part -->
+      <path d="M-47 74C-53 26-30-8 4-8C36-8 53 22 47 72C45 54 39 38 31 28C25 21 17 15 8 11C-2 13-14 19-24 28C-34 38-42 54-47 74Z" fill="url(#gHairF)"/>
+      <g fill="none" stroke-linecap="round">
+        <path d="M12 12C2 7-14 5-30 16M12 12C6 2-6-4-22-2M12 11C16 2 22-3 30 0M12 12C20 8 30 10 39 20" stroke="#2a150c" stroke-width="1.3" opacity=".45"/>
+        <path d="M4 15C-8 21-20 32-30 48M-4 13C-18 18-30 30-38 46" stroke="#2a150c" stroke-width="1.1" opacity=".35"/>
+        <path d="M12 15C22 22 30 34 36 50" stroke="#2a150c" stroke-width="1.1" opacity=".35"/>
+        <path d="M0 17C-10 24-20 34-27 46" stroke="#c48d68" stroke-width="1.6" opacity=".5"/>
+      </g>
+      <!-- glossy sheen band -->
+      <path d="M-36 26C-26 8-8 0 10 1C25 2 36 10 42 22C34 14 24 10 13 10C-3 10-20 15-36 26Z" fill="url(#gSheen)"/>
+      <path d="M-22 6C-14 1-5-1 4-1M20 1C26 3 31 6 35 10" stroke="#f0c4a0" stroke-width="1.5" fill="none" opacity=".75" stroke-linecap="round"/>
+    </g>
+
+    <!-- L13a straw sun hat (outfit A) -->
+    <g id="hatA" class="oA">
+      <defs><linearGradient id="gLip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e3b6"/><stop offset="1" stop-color="#c29d60"/></linearGradient></defs>
+      <path d="M-100 30C-70 38-30 38 0 38C40 38 80 34 102 24L102 32C80 42 40 46 0 46C-40 46-80 42-100 36Z" fill="#3a1a10" opacity=".3" filter="url(#fSoft2)"/>
+      <path d="M-110 30C-102 24-66 15 0 15C66 15 102 20 110 24C110 31 98 35 82 34C52 32 24 30 0 30C-24 30-54 32-82 36C-98 38-110 37-110 30Z" fill="url(#gLip)"/>
+      <path d="M-110 30C-102 24-66 15 0 15C66 15 102 20 110 24C110 31 98 35 82 34C52 32 24 30 0 30C-24 30-54 32-82 36C-98 38-110 37-110 30Z" fill="url(#pWeave)"/>
+      <path d="M-107 29C-100 24-66 16.5 0 16.5C66 16.5 100 21 107 24.5" fill="none" stroke="#fff6dc" stroke-width="1.4" opacity=".65"/>
+      <path d="M-110 30C-110 37-98 38-82 36C-54 32-24 30 0 30C24 30 52 32 82 34C98 35 110 31 110 24" fill="none" stroke="#a9853f" stroke-width="1.4"/>
+      <path d="M-38 14C-42-14-24-39 0-40C24-39 42-14 38 12C20 17-20 17-38 14Z" fill="url(#gStraw)"/>
+      <path d="M-38 14C-42-14-24-39 0-40C24-39 42-14 38 12C20 17-20 17-38 14Z" fill="url(#pWeave)"/>
+      <path d="M18-34C30-28 38-14 38 12C34 13 30 14 26 14C30-6 28-22 18-34Z" fill="#8a6430" opacity=".18"/>
+      <path d="M-29-22C-21-32-10-36 0-36" stroke="#fff6dc" stroke-width="3" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M-39 3C-20 8 20 8 39 1L38 12C20 17-20 17-38 14Z" fill="url(#gRibbon)"/>
+      <path d="M-36 5.5C-20 9.5 10 9.5 28 6" stroke="#fff" stroke-width="1.2" opacity=".6" fill="none"/>
+      <g transform="translate(30 7)">
+        <path d="M-1 1C-4 10-6 18-10 27L-4 25L-2 30C1 21 2 11 1 2ZM1 1C6 10 9 17 14 23L16 17L20 19C14 13 8 7 2 1Z" fill="#e35f91"/>
+        <path d="M0 0C-4-12-18-14-18-5S-6 5 0 0Z" fill="url(#gRibbon)"/><path d="M0 0C6-12 20-12 19-3S6 5 0 0Z" fill="url(#gRibbon)"/>
+        <path d="M-3-1C-7-6-12-7-14-5M3-1C7-6 12-7 15-5" stroke="#c94377" stroke-width="1" opacity=".5" fill="none"/>
+        <ellipse rx="4" ry="3.4" fill="#ff8db8"/>
+        <path d="M-14-6C-11-9-7-8-5-5M6-6C9-9 14-8 16-5" stroke="#fff" stroke-width="1.3" opacity=".75" fill="none"/>
+      </g>
+    </g>
+
+    <!-- L13b tiara (outfit B) -->
+    <g id="tiaraB" class="oB" transform="translate(2 10) scale(1.3) translate(-2 -10)">
+      <path d="M-30 17C-20 10-9 7 2 7C13 7 24 10 34 16L32 10C28 6 24 5 19 5L18-2C14 1 10 2 6 1L2-13L-2 1C-6 2-10 1-14-2L-15 5C-20 5-24 7-28 11Z" fill="url(#gSilver)" stroke="#9aa2ba" stroke-width=".8"/>
+      <circle cx="2" cy="1" r="3.4" fill="#f27aaa" stroke="#fff" stroke-width=".8"/>
+      <circle cx="-14" cy="6" r="2" fill="#b9a7f2"/><circle cx="18" cy="6" r="2" fill="#b9a7f2"/>
+      <g fill="#fff"><circle cx="-22" cy="11" r="1.1"/><circle cx="-6" cy="8" r="1.1"/><circle cx="10" cy="8" r="1.1"/><circle cx="26" cy="11" r="1.1"/></g>
+      <g transform="translate(2 -13) scale(.55)"><use href="#spk" class="glint" fill="#fff"/></g>
+      <g transform="translate(-20 6) scale(.35)"><use href="#spk" class="glint" fill="#fff" style="animation-delay:-1.2s"/></g>
+    </g>
+  </g>
+  </g><!-- /translate -->
+  </g><!-- /breath -->
+</g><!-- /player -->
+<!-- ================= FOREGROUND SPARKLES ================= -->
+<g id="fxSparkles" fill="#fff">
+  <g transform="translate(566 236) scale(.9)"><use href="#spk" class="tw" style="animation-delay:-.7s"/></g>
+  <g transform="translate(372 318) scale(.6)"><use href="#spk" class="tw" style="animation-delay:-2.1s"/></g>
+  <g transform="translate(592 470) scale(.7)"><use href="#spk" class="tw" style="animation-delay:-1.3s"/></g>
+  <g transform="translate(352 560) scale(.5)"><use href="#spk" class="tw" style="animation-delay:-2.7s"/></g>
+  <g transform="translate(1150 470) scale(.6)"><use href="#spk" class="tw" style="animation-delay:-.2s"/></g>
+  <g transform="translate(212 150) scale(.55)"><use href="#spk" class="tw" style="animation-delay:-1.8s"/></g>
+</g>
+
+<!-- outfit-change burst -->
+<ellipse id="flash" cx="472" cy="410" rx="150" ry="290" fill="#fff6fb" filter="url(#fSoft)"/>
+<g id="burst" fill="#fff">
+  <g transform="translate(410 250) scale(4.2)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:0ms"/></g>
+  <g transform="translate(548 300) scale(3.2)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:40ms"/></g>
+  <g transform="translate(392 410) scale(2.9)"><use href="#spk" class="bs" fill="#ffd1e6" style="animation-delay:80ms"/></g>
+  <g transform="translate(566 450) scale(4.5)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:120ms"/></g>
+  <g transform="translate(430 560) scale(3.2)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:160ms"/></g>
+  <g transform="translate(520 200) scale(2.6)"><use href="#spk" class="bs" fill="#ffd1e6" style="animation-delay:0ms"/></g>
+  <g transform="translate(372 520) scale(2.2)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:40ms"/></g>
+  <g transform="translate(540 600) scale(3.0)"><use href="#spk" class="bs" fill="#ffd1e6" style="animation-delay:80ms"/></g>
+  <g transform="translate(470 330) scale(2.1)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:120ms"/></g>
+  <g transform="translate(600 360) scale(1.9)"><use href="#spk" class="bs" fill="#ffe7a8" style="animation-delay:160ms"/></g>
+  <g transform="translate(350 300) scale(1.9)"><use href="#spk" class="bs" fill="#ffe7a8" style="animation-delay:0ms"/></g>
+  <g transform="translate(480 470) scale(2.4)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:40ms"/></g>
+  <g transform="translate(450 170) scale(1.9)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:80ms"/></g>
+  <g transform="translate(590 540) scale(2.1)"><use href="#spk" class="bs" fill="#fff" style="animation-delay:120ms"/></g>
+</g>
+</g>
+
+<!-- ================= UI ================= -->
+<!-- theme ribbon banner -->
+<g id="banner" filter="url(#fUi)">
+  <path d="M472 24H404L422 49L404 74H472Z" fill="url(#gBannerDk)"/>
+  <path d="M808 24H876L858 49L876 74H808Z" fill="url(#gBannerDk)"/>
+  <path d="M452 62L472 74V60Z" fill="#a52a68"/><path d="M828 62L808 74V60Z" fill="#a52a68"/>
+  <path d="M452 14Q640 2 828 14V62Q640 50 452 62Z" fill="url(#gBanner)" stroke="#e2468e" stroke-width="2"/>
+  <path d="M458 19Q640 8 822 19V57Q640 46 458 57Z" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <path d="M460 19Q640 8 820 19V33Q640 23 460 33Z" fill="url(#gGloss)" opacity=".7"/>
+  <text x="640" y="46" text-anchor="middle" font-size="29" font-weight="700" fill="#fff" stroke="#d23c84" stroke-width="6" stroke-linejoin="round" paint-order="stroke" letter-spacing=".5">Theme: Garden Party</text>
+</g>
+<!-- timer pill -->
+<g id="timerPill" filter="url(#fUi)">
+  <rect x="592" y="74" width="96" height="28" rx="14" fill="#fff" stroke="#f7bdd5" stroke-width="1.5"/>
+  <circle cx="612" cy="88" r="6.2" fill="none" stroke="#ec5c9c" stroke-width="1.8"/>
+  <path d="M612 84.5V88L614.6 89.6" stroke="#ec5c9c" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <text id="timer" x="648" y="95" text-anchor="middle" font-size="19" font-weight="600" fill="#e0428a" letter-spacing=".5">09:24</text>
+</g>
+
+<!-- nameplates -->
+<g class="bob" filter="url(#fUiS)">
+  <path d="M470 133L463 126H477Z" fill="#fff"/>
+  <rect x="414" y="84" width="112" height="43" rx="15" fill="#fff"/>
+  <rect x="417" y="87" width="106" height="37" rx="12" fill="none" stroke="#fbd0e2" stroke-width="1.2"/>
+  <text x="470" y="104" text-anchor="middle" font-size="18" font-weight="600" fill="#4b2342">You</text>
+  <text class="sans" x="470" y="118.5" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ec4f95" letter-spacing=".3">New Model</text>
+</g>
+<g class="bob2" filter="url(#fUiS)">
+  <path d="M1080 230L1074 224H1086Z" fill="#fff"/>
+  <rect x="1032" y="192" width="96" height="34" rx="12" fill="#fff"/>
+  <text x="1080" y="207.5" text-anchor="middle" font-size="14.5" font-weight="600" fill="#4b2342">Aria</text>
+  <text class="sans" x="1080" y="220" text-anchor="middle" font-size="9.5" font-weight="800" fill="#ec4f95" letter-spacing=".3">Fashion Maven</text>
+</g>
+
+<!-- "Spell it!" heart bubble -->
+<g class="bob" style="animation-duration:2.6s">
+  <g transform="translate(262 64)" filter="url(#fUi)">
+    <path d="M0 50C-18 36-62 12-62-17C-62-39-47-51-30-51C-16-51-6-43 0-33C6-43 16-51 30-51C47-51 62-39 62-17C62 12 18 36 0 50Z" fill="url(#gHeart)" stroke="#fff" stroke-width="3"/>
+    <ellipse cx="-33" cy="-33" rx="15" ry="8" transform="rotate(-28 -33 -33)" fill="#fff" opacity=".55"/>
+    <circle cx="-44" cy="-22" r="2.4" fill="#fff" opacity=".6"/>
+    <text x="0" y="-6" text-anchor="middle" font-size="21" font-weight="700" fill="#fff" stroke="#d23c84" stroke-width="4.5" stroke-linejoin="round" paint-order="stroke">Spell it!</text>
+    <g transform="translate(0 15)" stroke-linejoin="round">
+      <path d="M-9-3H-5L1-8V8L-5 3H-9Z" fill="#fff" stroke="#d23c84" stroke-width="1.6"/>
+      <path d="M4.5-4C6.5-2 6.5 2 4.5 4M7.5-7C11-3 11 3 7.5 7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+  </g>
+</g>
+
+<!-- candy "Try another outfit" button -->
+<g id="btn" role="button" tabindex="0" aria-label="Try another outfit">
+  <rect class="ring" x="1020" y="642" width="248" height="66" rx="33" fill="none" stroke="#fff" stroke-width="3" opacity="0"/>
+  <g class="face" filter="url(#fUi)">
+    <rect x="1028" y="652" width="232" height="52" rx="26" fill="#c9327a"/>
+    <rect x="1028" y="647" width="232" height="52" rx="26" fill="url(#gBtn)" stroke="#fff" stroke-width="2.5"/>
+    <path d="M1048 657H1240C1246 657 1250 661 1250 666C1250 669 1248 671 1245 671H1043C1040 671 1038 669 1038 666C1038 661 1042 657 1048 657Z" fill="#fff" opacity=".45"/>
+    <use href="#spk" fill="#fff" transform="translate(1056 674) scale(.95)"/>
+    <use href="#spk" fill="#fff" transform="translate(1067 662) scale(.42)"/>
+    <text x="1158" y="681" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" stroke="#c8327a" stroke-width="4" stroke-linejoin="round" paint-order="stroke">Try another outfit</text>
+  </g>
+</g>
+</svg>
+</div>
+<script>
+(function(){
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('game');
+  function el(tag, attrs, parent){
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function f(v){ return (Math.round(v * 10) / 10).toString(); }
+  // deterministic noise so every load (and screenshot) looks the same
+  var seed = 7;
+  function rnd(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  // smooth Catmull-Rom spline through points
+  function cr(pts, move){
+    var d = (move ? 'M' : 'L') + f(pts[0][0]) + ' ' + f(pts[0][1]);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      d += 'C' + f(p1[0] + (p2[0] - p0[0]) / 6) + ' ' + f(p1[1] + (p2[1] - p0[1]) / 6) + ' ' +
+                 f(p2[0] - (p3[0] - p1[0]) / 6) + ' ' + f(p2[1] - (p3[1] - p1[1]) / 6) + ' ' + f(p2[0]) + ' ' + f(p2[1]);
+    }
+    return d;
+  }
+
+  /* ---- uniform letterboxed scaling ---- */
+  function fit(){
+    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    document.documentElement.style.setProperty('--s', s);
+  }
+  window.addEventListener('resize', fit); fit();
+
+  /* ---- start outfit from URL (?outfit=b) ---- */
+  var q = new URLSearchParams(location.search);
+  if ((q.get('outfit') || '').toLowerCase() === 'b') svg.setAttribute('data-outfit', 'b');
+
+  /* ---- long soft waves: each lock is a tapered ribbon along a sine centre-line ---- */
+  function lock(o, parent){
+    var N = 30, C = [], W = [], Nn = [], Lp = [], Rp = [], i;
+    for (i = 0; i <= N; i++) {
+      var s = i / N, env = Math.min(1, 0.2 + s * 1.6);
+      C.push([o.x + o.drift * s * s + o.amp * env * Math.sin(2 * Math.PI * s * o.len / o.wl + o.ph), o.y + s * o.len]);
+      var w = o.w0 * (1 - s) + o.w1 * s;
+      if (s > 0.76) w *= Math.max(0.06, Math.pow((1 - s) / 0.24, 0.75));
+      if (s < 0.1) w *= 0.3 + s / 0.1 * 0.7;
+      W.push(w / 2);
+    }
+    for (i = 0; i <= N; i++) {
+      var a = C[Math.max(0, i - 1)], b = C[Math.min(N, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy);
+      Nn.push([dy / m, -dx / m]);
+      Lp.push([C[i][0] - Nn[i][0] * W[i], C[i][1] - Nn[i][1] * W[i]]);
+      Rp.push([C[i][0] + Nn[i][0] * W[i], C[i][1] + Nn[i][1] * W[i]]);
+    }
+    var g = el('g', {}, parent);
+    el('path', {d: cr(Lp, true) + cr(Rp.slice().reverse(), false) + 'Z', fill: o.col}, g);
+    var edge = [];
+    for (i = 2; i <= N - 2; i++) edge.push([Rp[i][0] - Nn[i][0] * 1.2, Rp[i][1] - Nn[i][1] * 1.2]);
+    el('path', {d: cr(edge, true), fill: 'none', stroke: o.dark, 'stroke-width': '1.8', 'stroke-opacity': '.5', 'stroke-linecap': 'round', filter: 'url(#fSoft1)'}, g);
+    [-0.35, 0.3].forEach(function(k){
+      var pts = [];
+      for (var i = 3; i <= N - 4; i++) pts.push([C[i][0] + Nn[i][0] * W[i] * k, C[i][1] + Nn[i][1] * W[i] * k]);
+      el('path', {d: cr(pts, true), fill: 'none', stroke: o.fine, 'stroke-width': '.8', 'stroke-opacity': '.5', 'stroke-linecap': 'round'}, g);
+    });
+    var run = [];
+    function flush(){
+      if (run.length > 3) {
+        var L2 = [], R2 = [], M2 = [], n = run.length;
+        run.forEach(function(r, j){
+          var t = j / (n - 1), w = r[2] * 0.42 * Math.pow(Math.sin(Math.PI * t), 0.8);
+          L2.push([r[0] - r[3] * w, r[1] - r[4] * w]); R2.push([r[0] + r[3] * w, r[1] + r[4] * w]);
+          if (t > 0.2 && t < 0.8) M2.push([r[0] - r[3] * r[2] * 0.12, r[1] - r[4] * r[2] * 0.12]);
+        });
+        el('path', {d: cr(L2, true) + cr(R2.reverse(), false) + 'Z', fill: o.light, opacity: '.6', filter: 'url(#fSoft1)'}, g);
+        if (M2.length > 1) el('path', {d: cr(M2, true), fill: 'none', stroke: o.shine, 'stroke-width': '1.1', 'stroke-opacity': '.8', 'stroke-linecap': 'round'}, g);
+      }
+      run = [];
+    }
+    for (i = 1; i < N - 3; i++) {
+      if (C[i + 1][0] - C[i - 1][0] < -0.3) run.push([C[i][0] - Nn[i][0] * W[i] * 0.15, C[i][1] - Nn[i][1] * W[i] * 0.15, W[i], Nn[i][0], Nn[i][1]]);
+      else flush();
+    }
+    flush();
+  }
+  var back = document.getElementById('hairBackLocks');
+  var BX = [-41, -35, -25, -13, 0, 13, 25, 35, 41], BY = [22, 12, 5, 1, -1, 1, 5, 12, 22];
+  BX.forEach(function(x, i){
+    var c = i - 4;
+    lock({x: x, y: BY[i], len: 288 - BY[i] + (i % 2 ? 6 : -2), amp: 6.5, wl: 74, ph: 0.4 * i + (i % 3) * 0.3, w0: 24, w1: 20, drift: c * 5.2,
+          col: 'url(#gLockB)', dark: '#160904', fine: '#5e3824', light: '#7a4a2e', shine: '#b47c56'}, back);
+  });
+  var front = document.getElementById('hairFrontLocks');
+  [
+    {x: -50, y: 60, len: 140, amp: 6, wl: 66, ph: 0.7, w0: 16, w1: 12, drift: 2},
+    {x: -40, y: 46, len: 168, amp: 6.5, wl: 70, ph: 1.3, w0: 21, w1: 15, drift: 10},
+    {x: 49, y: 56, len: 122, amp: 5.5, wl: 64, ph: 2.6, w0: 14, w1: 10, drift: 4},
+    {x: 40, y: 44, len: 152, amp: 6, wl: 68, ph: 2.1, w0: 19, w1: 14, drift: -3}
+  ].forEach(function(o){
+    o.col = 'url(#gLockF)'; o.dark = '#1e0d06'; o.fine = '#7a4c32'; o.light = '#9a6644'; o.shine = '#e0ae88';
+    lock(o, front);
+  });
+
+  /* ---- plush scalloped rug edge ---- */
+  var rugEdge = document.getElementById('rugEdge');
+  for (var ri = 0; ri < 56; ri++) {
+    var ra = ri / 56 * Math.PI * 2;
+    el('ellipse', {cx: f(470 + Math.cos(ra) * 214), cy: f(678 + Math.sin(ra) * 36), rx: '9', ry: '5.2'}, rugEdge);
+  }
+
+  /* ---- warm wood floor planks in perspective ---- */
+  var planks = document.getElementById('planks');
+  var VPY = 230, Y0 = 496, Y1 = 720, k = (Y1 - VPY) / (Y0 - VPY);
+  var xs = [];
+  for (var x0 = -360; x0 <= 1640; x0 += 44) xs.push(x0);
+  xs.forEach(function(x0, i){
+    if (i < xs.length - 1) el('path', {d: 'M' + x0 + ' ' + Y0 + 'L' + xs[i + 1] + ' ' + Y0 + 'L' + f(640 + (xs[i + 1] - 640) * k) + ' ' + Y1 + 'L' + f(640 + (x0 - 640) * k) + ' ' + Y1 + 'Z',
+      stroke: 'none', fill: rnd() < 0.5 ? '#fff3e6' : '#5b3322', 'fill-opacity': f(0.03 + rnd() * 0.07)}, planks);
+    el('path', {d: 'M' + x0 + ' ' + Y0 + 'L' + f(640 + (x0 - 640) * k) + ' ' + Y1}, planks);
+    if (i < xs.length - 1) {
+      for (var j = 0; j < 2; j++) {
+        var y = Y0 + 14 + rnd() * (Y1 - Y0 - 20), fy = (y - VPY) / (Y0 - VPY);
+        el('path', {d: 'M' + f(640 + (x0 - 640) * fy) + ' ' + f(y) + 'H' + f(640 + (xs[i + 1] - 640) * fy), 'stroke-opacity': '.2'}, planks);
+      }
+    }
+  });
+
+  /* ---- potted palm: slim trunks with a crown of long, broad, glossy leaves ---- */
+  var fronds = document.getElementById('fronds');
+  el('path', {d: 'M936 498C933 470 936 438 943 404', fill: 'none', stroke: '#8a6a52', 'stroke-width': '7', 'stroke-linecap': 'round'}, fronds);
+  el('path', {d: 'M946 498C951 476 953 456 951 434', fill: 'none', stroke: '#7c5e48', 'stroke-width': '6', 'stroke-linecap': 'round'}, fronds);
+  for (var tr = 0; tr < 7; tr++) el('path', {d: 'M' + f(931.5 + tr * 1.1) + ' ' + (488 - tr * 12) + 'h8', stroke: '#6b4f3b', 'stroke-width': '1.4', 'stroke-opacity': '.6'}, fronds);
+  function leaf(bx, by, deg, L, W, back){
+    var a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), droop = L * (0.12 + 0.5 * Math.abs(c));
+    var p0 = {x: bx, y: by}, p2 = {x: bx + c * L, y: by + s * L + droop}, p1 = {x: bx + c * L * 0.5, y: by + s * L * 0.5 - droop * 0.3};
+    var N = 18, Cc = [], Lp = [], Rp = [], Hl = [];
+    for (var i = 0; i <= N; i++) {
+      var t = i / N, u = 1 - t;
+      var x = u*u*p0.x + 2*u*t*p1.x + t*t*p2.x, y = u*u*p0.y + 2*u*t*p1.y + t*t*p2.y;
+      var dx = 2*u*(p1.x - p0.x) + 2*t*(p2.x - p1.x), dy = 2*u*(p1.y - p0.y) + 2*t*(p2.y - p1.y), m = Math.hypot(dx, dy), nx = -dy / m, ny = dx / m;
+      var w = W * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.02)), 0.7);
+      Cc.push([x, y]); Lp.push([x + nx * w, y + ny * w]); Rp.push([x - nx * w * 0.9, y - ny * w * 0.9]);
+      if (t > 0.15 && t < 0.8) Hl.push([x + nx * w * 0.45, y + ny * w * 0.45]);
+    }
+    var g = el('g', {}, fronds);
+    el('path', {d: cr(Lp, true) + cr(Rp.slice().reverse(), false) + 'Z', fill: back ? '#3f8460' : 'url(#gLeaf)', stroke: back ? '#2f6a4a' : '#2a6b49', 'stroke-width': '.8'}, g);
+    el('path', {d: cr(Rp.slice(1, N), true) + cr(Cc.slice(1, N).reverse(), false) + 'Z', fill: '#1d5a3a', opacity: back ? '.25' : '.22'}, g);
+    el('path', {d: cr(Cc.slice(1, N - 1), true), fill: 'none', stroke: back ? '#7cbf98' : '#d8f6e2', 'stroke-width': '1.3', 'stroke-opacity': '.75', 'stroke-linecap': 'round'}, g);
+    if (!back) el('path', {d: cr(Hl, true), fill: 'none', stroke: '#fff', 'stroke-width': f(W * 0.35), 'stroke-opacity': '.32', 'stroke-linecap': 'round', filter: 'url(#fSoft1)'}, g);
+  }
+  [[-112, 112, 1], [-72, 118, 1], [-150, 104, 1], [-34, 104, 1], [-92, 92, 1]].forEach(function(l){ leaf(943, 404, l[0], l[1], 15, l[2]); });
+  [[-176, 92], [-4, 96], [-128, 112], [-54, 112], [-160, 108], [-20, 108]].forEach(function(l){ leaf(943, 404, l[0], l[1], 16, 0); });
+  [[-150, 74], [-28, 78], [-100, 64]].forEach(function(l){ leaf(951, 436, l[0], l[1], 13, 0); });
+
+  /* ---- navy gown: tiered satin flounces (outfit B) ---- */
+  var tiers = document.getElementById('gownTiers');
+  [ // top y, bottom y, half-width top, half-width bottom, flounces
+    {y0: 420, y1: 506, w0: 100, w1: 142, n: 10},
+    {y0: 340, y1: 438, w0: 74, w1: 116, n: 9},
+    {y0: 264, y1: 362, w0: 50, w1: 92, n: 8},
+    {y0: 205, y1: 286, w0: 27, w1: 66, n: 7}
+  ].forEach(function(r, ti){
+    var cx = 1, g = el('g', {}, tiers), dip = 13, step = 2 * r.w1 / r.n, i;
+    var h = r.y1 - r.y0;
+    var top = 'M' + (cx - r.w0) + ' ' + r.y0 + 'L' + (cx + r.w0) + ' ' + r.y0 +
+      'C' + (cx + r.w0 + 14) + ' ' + f(r.y0 + h * 0.25) + ' ' + (cx + r.w1 + 3) + ' ' + f(r.y1 - h * 0.35) + ' ' + (cx + r.w1) + ' ' + r.y1;
+    var close = 'C' + (cx - r.w1 - 3) + ' ' + f(r.y1 - h * 0.35) + ' ' + (cx - r.w0 - 14) + ' ' + f(r.y0 + h * 0.25) + ' ' + (cx - r.w0) + ' ' + r.y0 + 'Z';
+    var hem = '', lin = '';
+    for (i = r.n; i > 0; i--) {
+      var xa = cx - r.w1 + i * step, xb = xa - step, front = (i + ti) % 2 === 0, yy = front ? r.y1 + dip : r.y1 - 1;
+      hem += 'C' + f(xa - step * 0.12) + ' ' + yy + ' ' + f(xb + step * 0.12) + ' ' + yy + ' ' + f(xb) + ' ' + r.y1;
+      lin += 'Q' + f((xa + xb) / 2) + ' ' + (r.y1 + dip * 0.85) + ' ' + f(xb) + ' ' + r.y1;
+    }
+    if (ti > 0) el('path', {d: top + hem + close, fill: '#05081a', opacity: '.5', transform: 'translate(0 7)', filter: 'url(#fSoft2)'}, g);
+    el('path', {d: top + lin + close, fill: '#0c112c'}, g);
+    el('path', {d: top + hem + close, fill: 'url(#gNavyTier)'}, g);
+    el('path', {d: top + hem + close, fill: 'url(#gShadeX)', opacity: '.85'}, g);
+    for (var j = 0; j <= r.n; j++) {
+      var xb2 = cx - r.w1 + j * step, xt = cx - r.w0 + j * (2 * r.w0 / r.n), lit = 1 - j / r.n;
+      if (j > 0 && j < r.n) {
+        el('path', {d: 'M' + f(xt) + ' ' + (r.y0 + 6) + 'C' + f(xt + (xb2 - xt) * 0.1) + ' ' + f((r.y0 + r.y1) / 2) + ' ' + f(xb2) + ' ' + (r.y1 - 22) + ' ' + f(xb2) + ' ' + (r.y1 + 1),
+          fill: 'none', stroke: '#070b22', 'stroke-width': '2.4', 'stroke-opacity': '.6', 'stroke-linecap': 'round'}, g);
+      }
+      if (j < r.n) {
+        var xm = xb2 + step / 2, xtm = xt + r.w0 / r.n, isFront = (j + 1 + ti) % 2 === 0;
+        if (isFront) {
+          el('path', {d: 'M' + f(xtm) + ' ' + (r.y0 + 10) + 'C' + f(xtm + (xm - xtm) * 0.1) + ' ' + f((r.y0 + r.y1) / 2) + ' ' + f(xm) + ' ' + (r.y1 - 20) + ' ' + f(xm) + ' ' + (r.y1 + dip * 0.6),
+            fill: 'none', stroke: '#b4c5f7', 'stroke-width': f(4 + 6 * lit), 'stroke-opacity': f(0.1 + 0.45 * lit), 'stroke-linecap': 'round', filter: 'url(#fSoft2)'}, g);
+          el('path', {d: 'M' + f(xtm) + ' ' + (r.y0 + 16) + 'C' + f(xtm + (xm - xtm) * 0.1) + ' ' + f((r.y0 + r.y1) / 2) + ' ' + f(xm) + ' ' + (r.y1 - 22) + ' ' + f(xm) + ' ' + (r.y1 + dip * 0.3),
+            fill: 'none', stroke: '#dbe4ff', 'stroke-width': '1', 'stroke-opacity': f(0.15 + 0.5 * lit), 'stroke-linecap': 'round'}, g);
+          el('path', {d: 'M' + f(xb2 + 2) + ' ' + (r.y1 + 2) + 'Q' + f(xm) + ' ' + (r.y1 + dip + 1.5) + ' ' + f(xb2 + step - 2) + ' ' + (r.y1 + 2),
+            fill: 'none', stroke: '#8ea2e6', 'stroke-width': '1.6', 'stroke-opacity': f(0.4 + 0.45 * lit)}, g);
+        } else {
+          el('path', {d: 'M' + f(xtm) + ' ' + (r.y0 + 12) + 'C' + f(xtm) + ' ' + f((r.y0 + r.y1) / 2) + ' ' + f(xm) + ' ' + (r.y1 - 20) + ' ' + f(xm) + ' ' + (r.y1 - 2),
+            fill: 'none', stroke: '#060a20', 'stroke-width': '5', 'stroke-opacity': '.35', 'stroke-linecap': 'round', filter: 'url(#fSoft1)'}, g);
+        }
+      }
+    }
+    // ruffled trim: little waves riding each flounce edge
+    for (i = r.n; i > 0; i--) {
+      var xa3 = cx - r.w1 + i * step, xb3 = xa3 - step, fr = (i + ti) % 2 === 0, yy3 = fr ? r.y1 + dip : r.y1 - 1;
+      var P = [[xa3, r.y1], [xa3 - step * 0.12, yy3], [xb3 + step * 0.12, yy3], [xb3, r.y1]], pts3 = [];
+      for (var q2 = 0; q2 <= 6; q2++) {
+        var t3 = q2 / 6, u3 = 1 - t3;
+        pts3.push([u3*u3*u3*P[0][0] + 3*u3*u3*t3*P[1][0] + 3*u3*t3*t3*P[2][0] + t3*t3*t3*P[3][0],
+                   u3*u3*u3*P[0][1] + 3*u3*u3*t3*P[1][1] + 3*u3*t3*t3*P[2][1] + t3*t3*t3*P[3][1]]);
+      }
+      var rd = 'M' + f(pts3[0][0]) + ' ' + f(pts3[0][1] - 2);
+      for (q2 = 1; q2 < pts3.length; q2++) rd += 'Q' + f((pts3[q2 - 1][0] + pts3[q2][0]) / 2) + ' ' + f((pts3[q2 - 1][1] + pts3[q2][1]) / 2 + 3.2) + ' ' + f(pts3[q2][0]) + ' ' + f(pts3[q2][1] - 2);
+      el('path', {d: rd, fill: 'none', stroke: fr ? '#7488d6' : '#2c3a78', 'stroke-width': '2', 'stroke-opacity': fr ? f(0.5 + 0.4 * (i / r.n)) : '.8', 'stroke-linejoin': 'round'}, g);
+    }
+    for (var s = 0; s < r.n * 2; s++) {
+      var gx = cx + (rnd() * 2 - 1) * (r.w0 + (r.w1 - r.w0) * 0.6), gy = r.y0 + 8 + rnd() * (r.y1 - r.y0 - 4);
+      el('circle', {cx: f(gx), cy: f(gy), r: f(0.6 + rnd() * 0.7), fill: '#e8eeff', opacity: f(0.4 + rnd() * 0.5)}, g);
+    }
+  });
+
+  /* ---- countdown 09:24 ---- */
+  var left = 9 * 60 + 24, timer = document.getElementById('timer');
+  setInterval(function(){
+    left = Math.max(0, left - 1);
+    var m = Math.floor(left / 60), s2 = left % 60;
+    timer.textContent = (m < 10 ? '0' : '') + m + ':' + (s2 < 10 ? '0' : '') + s2;
+  }, 1000);
+
+  /* ---- blink every 3–5 s ---- */
+  var blinkAnims = document.querySelectorAll('.blinker > animateTransform');
+  function blink(){
+    blinkAnims.forEach(function(a){ try { a.beginElement(); } catch (e) {} });
+    setTimeout(blink, 3000 + Math.random() * 2000);
+  }
+  setTimeout(blink, 2300);
+
+  /* ---- outfit toggle with sparkle burst ---- */
+  var btn = document.getElementById('btn'), burst = document.getElementById('burst'), flash = document.getElementById('flash');
+  function toggle(){
+    [burst, flash].forEach(function(n){ n.classList.remove('go'); void n.getBoundingClientRect(); n.classList.add('go'); });
+    setTimeout(function(){
+      svg.setAttribute('data-outfit', svg.getAttribute('data-outfit') === 'a' ? 'b' : 'a');
+    }, 220);
+  }
+  btn.addEventListener('click', toggle);
+  btn.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+})();
+</script>
+</body>
+</html>

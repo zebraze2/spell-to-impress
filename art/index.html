@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spell to Impress · Art styles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fbf6f8;
+    --card: #ffffff;
+    --ink: #3a2a33;
+    --muted: #8a7480;
+    --pink: #e45c9c;
+    --line: #f0dfe7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 Nunito, system-ui, sans-serif;
+  }
+  header {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 16px 8px;
+  }
+  h1 {
+    margin: 0;
+    font: 600 30px/1.2 Fredoka, Nunito, sans-serif;
+  }
+  h1 span { color: var(--pink); }
+  header p {
+    margin: 6px 0 0;
+    color: var(--muted);
+  }
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 16px 48px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  @media (max-width: 860px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(180, 90, 130, .08);
+    display: flex;
+    flex-direction: column;
+  }
+  .frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #f3e8ee;
+  }
+  .frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .info {
+    padding: 14px 18px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .letter {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--pink);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font: 600 18px Fredoka, sans-serif;
+  }
+  .info h2 {
+    margin: 2px 0 2px;
+    font: 600 19px/1.25 Fredoka, sans-serif;
+  }
+  .info p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .info a {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--pink);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .info a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Spell to Impress <span>· pick an art style</span></h1>
+  <p>Same scene, four looks: the dressing room during a “Garden Party” round. Each one has a “Try another outfit” button that switches between a sundress and a ball gown.</p>
+</header>
+<main>
+  <section class="card">
+    <div class="frame"><iframe src="a-3d.html" title="A: 3D toy doll" loading="lazy"></iframe></div>
+    <div class="info">
+      <div class="letter">A</div>
+      <div>
+        <h2>3D toy doll</h2>
+        <p>Real 3D you can spin with your mouse. Closest to Roblox, but the clothes are built from smooth shapes, so it looks like a toy rather than DTI’s detailed models. Slowest to add new clothes.</p>
+        <a href="a-3d.html" target="_blank">Open full size ↗</a>
+      </div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="frame"><iframe src="b-glam.html" title="B: Glam doll" loading="lazy"></iframe></div>
+    <div class="info">
+      <div class="letter">B</div>
+      <div>
+        <h2>Glam doll (flat)</h2>
+        <p>DTI’s big-eyed glam look, drawn flat: glossy, pink and polished. Quick to add lots of clothes.</p>
+        <a href="b-glam.html" target="_blank">Open full size ↗</a>
+      </div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="frame"><iframe src="c-sketch.html" title="C: Fashion sketchbook" loading="lazy"></iframe></div>
+    <div class="info">
+      <div class="letter">C</div>
+      <div>
+        <h2>Fashion sketchbook</h2>
+        <p>A fashion designer’s sketchbook: ink and watercolor on paper. More grown-up and artsy than the Roblox game.</p>
+        <a href="c-sketch.html" target="_blank">Open full size ↗</a>
+      </div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="frame"><iframe src="d-pixel.html" title="D: Pixel boutique" loading="lazy"></iframe></div>
+    <div class="info">
+      <div class="letter">D</div>
+      <div>
+        <h2>Pixel boutique</h2>
+        <p>The same family as Wordhollow, dressed up for fashion. Cozy and game-like, with every item a little hand-made sprite.</p>
+        <a href="d-pixel.html" target="_blank">Open full size ↗</a>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>
