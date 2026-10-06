@@ -2,7 +2,7 @@
    - Words come in curriculum order; the first two of each idea are "fill the sound" (a fading scaffold).
    - Missed words come back three words later (spaced retrieval).
    - Only independent, first-try spellings of whole words and phrases count toward the 80%. */
-import { LEVELS, phraseId } from './words.js';
+import { LEVELS, phraseId } from './words.js?v=2271898f';
 
 export const PASS = 0.8;
 export const MIN_TRIES = 8;          // need at least this many scored tries in a round to unlock the next wing
@@ -45,6 +45,8 @@ export function makeSession(levelIndex = 0) {
     return shuffle(out);
   };
   S.phrase = () => L.phrases[Math.floor(Math.random() * L.phrases.length)];
+  /* the runway word: one that uses both of the level's ideas (check, shock, thick) */
+  S.capstone = () => { const both = L.words.filter(w => w.idea === 'both'); return both.length ? both[Math.floor(Math.random() * both.length)] : S.next().word; };
   S.save = () => { const p = loadProgress(); p[L.id] = { ...(p[L.id] || {}), next: S.cursor % L.words.length }; saveProgress(p); };
   return S;
 }
@@ -76,17 +78,20 @@ function playOne(id, fallbackText) {
 const pause = ms => new Promise(r => setTimeout(r, ms));
 export function stopAudio() { token++; if (current) { current.pause(); current = null; } if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 /* "sock. I lost my left sock. sock." */
-export async function dictate(word) {
+export async function dictate(word, { fill = false } = {}) {
   stopAudio(); const my = ++token;
   await playOne('w_' + word.w, word.w); if (my !== token) return;
   await pause(350); if (my !== token) return;
   await playOne('s_' + word.w, word.s); if (my !== token) return;
-  await pause(350); if (my !== token) return;
-  await playOne('w_' + word.w, word.w);
+  await pause(450); if (my !== token) return;
+  if (fill) await playOne('w_' + word.w, word.w);
+  else await playOne('t_' + word.w, 'Spell ' + word.w + '.');      // "Spell sock." makes the target word unmistakable
 }
 /* phrases are said twice, a little apart */
 export async function dictatePhrase(p) {
   stopAudio(); const my = ++token;
+  await playOne('g_phrase', 'Spell this whole phrase.'); if (my !== token) return;
+  await pause(300); if (my !== token) return;
   await playOne(phraseId(p), p); if (my !== token) return;
   await pause(900); if (my !== token) return;
   await playOne(phraseId(p), p);

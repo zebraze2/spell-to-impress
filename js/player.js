@@ -1,7 +1,7 @@
 /* Player controls (keys, click/tap-to-walk, drag to turn the camera) + a follow camera that stays in the room. */
 import * as THREE from 'three';
-import { TAU, clamp, lerp, angleTo } from './util.js';
-import { ROOM } from './room.js';
+import { TAU, clamp, lerp, angleTo } from './util.js?v=2271898f';
+import { ROOM } from './room.js?v=2271898f';
 
 export const WALK_SPEED = 1.9;      // m/s
 export const STRIDE = 1.15;         // metres per full walk cycle

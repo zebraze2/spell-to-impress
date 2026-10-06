@@ -1,7 +1,7 @@
 /* DTI-style face, painted onto a canvas and wrapped on the front of the head.
    A face = the person's own features (skin, iris, brows) + a makeup look (shadow, liner, lips, blush, extras).
    Three frames (open, half, shut) make the blink. */
-import { TAU, lerp, rng, canvasTex, hexA, shade } from './util.js';
+import { TAU, lerp, rng, canvasTex, hexA, shade } from './util.js?v=2271898f';
 
 export const FACE = { W: 0.30, Y0: -0.03 };   // decal covers 0.30 x 0.30 of the head front, centred 0.03 below head centre
 

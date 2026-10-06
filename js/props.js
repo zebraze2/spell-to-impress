@@ -1,8 +1,8 @@
 /* Boutique furniture, all modelled in code. */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { TAU, rng, V3, smoothSeams, canvasTex } from './util.js';
-import { TEX } from './textures.js';
+import { TAU, rng, V3, smoothSeams, canvasTex } from './util.js?v=2271898f';
+import { TEX } from './textures.js?v=2271898f';
 
 export const M = {
   wall: new THREE.MeshStandardMaterial({ color: '#f3e2dc', map: TEX.damask, roughness: 0.92 }),

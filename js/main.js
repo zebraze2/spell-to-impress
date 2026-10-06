@@ -4,18 +4,18 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js';
-import { buildDoll, animateDoll } from './doll.js';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js';
-import { CATALOG, PALETTE, makeItem } from './catalog.js';
-import { PRINTS, TEX } from './textures.js';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js';
-import { makeRivals, updateRival, person, STARTER } from './ai.js';
-import { makeSession, PASS, MIN_TRIES, loadProgress, saveProgress } from './spell.js';
-import { LEVELS } from './words.js';
-import { buildRunway, makeShow, RW } from './runway.js';
-import { UI } from './ui.js';
+import { buildRoom } from './room.js?v=2271898f';
+import { buildDoll, animateDoll } from './doll.js?v=2271898f';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=2271898f';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=2271898f';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=2271898f';
+import { PRINTS, TEX } from './textures.js?v=2271898f';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=2271898f';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=2271898f';
+import { makeSession, PASS, MIN_TRIES, loadProgress, saveProgress } from './spell.js?v=2271898f';
+import { LEVELS } from './words.js?v=2271898f';
+import { buildRunway, makeShow, RW } from './runway.js?v=2271898f';
+import { UI } from './ui.js?v=2271898f';
 
 const QS = new URLSearchParams(location.search);
 const THEMES = [
@@ -207,11 +207,19 @@ function startRound() {
 /* time's up: once any open card is finished, spell a phrase to walk the runway */
 function phraseForRunway() {
   phase = 'phrase'; C.moveTo = null; C.focus = null;
-  const p = session.phrase();
-  UI.spell(null, 'Time\'s up! Spell this to walk the runway', {
-    onFirst: right => { session.recordPhrase(right); score(); },
-    onEarn: startShow, noCancel: true,
-  }, { mode: 'phrase', phrase: p, words: level.words });
+  if (level.phrases && level.phrases.length) {          // later levels: a short phrase
+    const p = session.phrase();
+    UI.spell(null, 'Time\'s up! Spell this to walk the runway', {
+      onFirst: right => { session.recordPhrase(right); score(); },
+      onEarn: startShow, noCancel: true,
+    }, { mode: 'phrase', phrase: p, words: level.words });
+  } else {                                               // Level 1: one word that uses both ideas
+    const w = session.capstone();
+    UI.spell(w, 'Time\'s up! Spell one more word to walk the runway', {
+      onFirst: right => { session.record(w, right); score(); },
+      onEarn: startShow, noCancel: true,
+    }, { mode: 'word' });
+  }
 }
 function startShow() {
   phase = 'show';

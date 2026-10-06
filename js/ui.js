@@ -1,5 +1,5 @@
 /* HTML overlay: banner, nameplates, the "Spell it!" bubble, spelling card, colour / hair / makeup panels. */
-import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js';
+import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=2271898f';
 
 const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -63,7 +63,12 @@ function phraseHTML(p, words) {
 UI.spell = (word, forName, cb, { mode = 'word', phrase = '', words = [] } = {}) => {
   const card = $('spellCard'), input = $('spellInput'), prompt = $('spellPrompt'), reveal = $('spellReveal'), speak = $('spellSpeak'), fillRow = $('spellFill');
   const target = mode === 'phrase' ? phrase : mode === 'fill' ? word.chunk : word.w;
-  const ask = { word: 'Listen, then spell the word.', fill: 'Which letters make the missing sound?', phrase: 'Listen, then spell the whole phrase.' }[mode];
+  const nWords = mode === 'phrase' ? phrase.split(' ').length : 1;
+  const ask = { word: 'Spell the missing word.', fill: 'Type the letters for the missing sound.', phrase: `Spell the whole phrase: ${nWords} words.` }[mode];
+  // what to spell, made obvious without showing the spelling: the sentence with a blank, or one box per phrase word
+  const cloze = $('spellCloze');
+  if (mode === 'phrase') cloze.innerHTML = '<span class="pbox"></span>'.repeat(nWords);
+  else cloze.innerHTML = word.s.replace(new RegExp('\\b' + word.w + '\\b', 'i'), '<span class="blank"></span>');
   card.hidden = false; card.querySelector('.card').classList.remove('right'); card.querySelector('.row').style.visibility = '';
   card.querySelector('.card').classList.toggle('wide', mode === 'phrase');
   $('spellFor').textContent = forName;
@@ -82,12 +87,22 @@ UI.spell = (word, forName, cb, { mode = 'word', phrase = '', words = [] } = {}) 
   };
   const play = () => {
     speak.classList.add('playing');
-    (mode === 'phrase' ? dictatePhrase(phrase) : dictate(word)).then(() => speak.classList.remove('playing'));
+    (mode === 'phrase' ? dictatePhrase(phrase) : dictate(word, { fill: mode === 'fill' })).then(() => speak.classList.remove('playing'));
   };
   const showAnswer = () => { reveal.innerHTML = mode === 'phrase' ? phraseHTML(phrase, words) : revealHTML(word); reveal.hidden = false; input.hidden = true; fillRow.hidden = true; };
   showAsk(); play();
+  // letters always land in the answer box, even if she clicked somewhere else on the screen
+  const keyCatch = e => {
+    if (card.hidden || !box || document.activeElement === box || state === 'show' || state === 'done') return;
+    if (e.key.length === 1 && /[a-z ]/i.test(e.key)) { e.preventDefault(); box.focus(); box.value += e.key.toLowerCase(); box.oninput && box.oninput(); }
+    else if (e.key === 'Backspace') { e.preventDefault(); box.focus(); box.value = box.value.slice(0, -1); }
+    else if (e.key === 'Enter') { e.preventDefault(); check(); }
+  };
+  document.addEventListener('keydown', keyCatch, true);
+  card.onpointerdown = e => { if (box && e.target.tagName !== 'BUTTON' && e.target !== box) setTimeout(() => box.focus(), 0); };
   const close = earned => {
     stopAudio(); card.hidden = true;
+    document.removeEventListener('keydown', keyCatch, true); card.onpointerdown = null;
     speak.onclick = $('spellCheck').onclick = $('spellCancel').onclick = null;
     if (earned) cb.onEarn(); cb.onClose && cb.onClose(earned);
   };

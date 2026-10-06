@@ -1,9 +1,9 @@
 /* Hairstyles: a scalp cap (its edge is the hairline) + wavy back panel + tapered locks.
    Every style takes any colour; textures are shared per colour. */
 import * as THREE from 'three';
-import { TAU, lerp, clamp, smooth, V3, gridGeo, ribbonTube, crSample, cached } from './util.js';
-import { hairTex } from './textures.js';
-import { headShape } from './doll.js';
+import { TAU, lerp, clamp, smooth, V3, gridGeo, ribbonTube, crSample, cached } from './util.js?v=2271898f';
+import { hairTex } from './textures.js?v=2271898f';
+import { headShape } from './doll.js?v=2271898f';
 
 export const HAIR_COLORS = [
   { id: 'brown', name: 'Brown', base: '#2a1a13', mid: '#47301f', hi: '#9c7a5c' },

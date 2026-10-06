@@ -63,8 +63,8 @@ export const LEVELS = [
       { w: 'shock', idea: 'both', chunk: ['sh', 'ck'], s: 'The loud pop gave me a shock.' },
       { w: 'thick', idea: 'both', chunk: ['th', 'ck'], s: 'The book is very thick.' },
     ],
-    // phrase dictation to open the runway: only Level 1 patterns + tiny common words
-    phrases: ['a black duck', 'a fish and a duck', 'a thick brick', 'a chick on a rock', 'lunch on the deck', 'a thin moth', 'check the clock', 'a ship with a deck'],
+    // to walk the runway she spells one more word that uses BOTH ideas (phrase dictation starts at a later level)
+    runway: 'both',
   },
   // ---- the rest of the plan (agreed 2026-10-05); words are written when each level is built ----
   { id: 'bossy-r', n: 2, title: 'Bossy r', wing: 'Party Wing', ideas: [{ id: 'aror', label: 'ar · or', eg: 'star, horn' }, { id: 'erirur', label: 'er · ir · ur', eg: 'her, bird, fur' }], words: [] },
@@ -87,9 +87,9 @@ export const LEVELS = [
 export const phraseId = p => 'f_' + p.replace(/[^a-z]+/g, '_');
 
 /* every spoken line, by clip id (used by tools/make-audio.py) */
-export const CLIPS = {};
+export const CLIPS = { g_phrase: 'Spell this whole phrase.' };
 for (const L of LEVELS) {
   if (L.say) CLIPS['p_' + L.id] = L.say;
-  for (const w of L.words) { CLIPS['w_' + w.w] = w.w; CLIPS['s_' + w.w] = w.s; }
+  for (const w of L.words) { CLIPS['w_' + w.w] = w.w; CLIPS['s_' + w.w] = w.s; CLIPS['t_' + w.w] = 'Spell ' + w.w + '.'; }
   for (const p of L.phrases || []) CLIPS[phraseId(p)] = p;
 }

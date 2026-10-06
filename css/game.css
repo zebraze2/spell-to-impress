@@ -165,3 +165,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2a1724; fon
 #loading.gone { opacity: 0; pointer-events: none; }
 @media (max-width: 860px) { #level { top: auto; bottom: 46px; } }
 @media (max-width: 700px) { .ribbon { font-size: 21px; padding: 5px 24px 7px; } .ribbon .t1 { font-size: 17px; } #level { display: none; } #help { display: none; } }
+
+/* what to spell: the dictation sentence with a blank, or one box per phrase word */
+.cloze { font-size: 20px; line-height: 1.5; color: #5a3a50; margin: -2px 0 12px; }
+.cloze .blank { display: inline-block; width: 4.2em; height: 1.05em; margin: 0 4px; vertical-align: -3px; border-bottom: 3px solid var(--pink); }
+.cloze .pbox { display: inline-block; width: 64px; height: 30px; margin: 0 5px; border-radius: 8px; border: 2.5px dashed #f2a9c9; vertical-align: middle; }
