@@ -42,7 +42,9 @@ export function steerDir(from, to, colliders, out) {
     if (dist < m) {
       const w = (m - dist) / m * 1.8;
       const ax = dist > 1e-3 ? -px / dist : -dz, az = dist > 1e-3 ? -pz / dist : dx;
-      dx += ax * w; dz += az * w;
+      // slide round it: add the tangent that still heads toward the goal
+      let tx = -az, tz = ax; if (tx * dx + tz * dz < 0) { tx = -tx; tz = -tz; }
+      dx += ax * w + tx * w * 0.9; dz += az * w + tz * w * 0.9;
     }
   }
   const l2 = Math.hypot(dx, dz) || 1;

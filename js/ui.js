@@ -5,10 +5,12 @@ const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
 const HANGER = '<svg viewBox="0 0 32 32"><path d="M16 9.5a2.6 2.6 0 1 1 2.6-2.6c0 1.5-1.4 2-2.3 2.8L16 10l-11.8 9.1a1.6 1.6 0 0 0 1 2.9h21.6a1.6 1.6 0 0 0 1-2.9L16 10" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SPARK = '<svg viewBox="0 0 24 24"><path d="M12 1C13 8 16 11 23 12 16 13 13 16 12 23 11 16 8 13 1 12 8 11 11 8 12 1Z" fill="#fff"/></svg>';
+const LOCK = '<span class="lock"><svg viewBox="0 0 12 12"><rect x="2" y="5.2" width="8" height="5.8" rx="1.4" fill="#fff"/><path d="M3.9 5.4V4a2.1 2.1 0 0 1 4.2 0v1.4" fill="none" stroke="#fff" stroke-width="1.5"/></svg></span>';
 export const heartSVG = c => `<svg viewBox="0 0 32 30"><path d="M16 28C5 20 1 14 1 9a7.5 7.5 0 0 1 15-2 7.5 7.5 0 0 1 15 2c0 5-4 11-15 19z" fill="${c}" stroke="rgba(120,40,80,.25)"/><ellipse cx="9" cy="8" rx="3.2" ry="2.2" fill="rgba(255,255,255,.6)" transform="rotate(-30 9 8)"/></svg>`;
 
 export const UI = {
-  busy: false,
+  /* something is open on top of the game (read from the page, so nested cards can't get out of step) */
+  get busy() { return ['spellCard', 'panel', 'startCard', 'endCard'].some(id => !$(id).hidden); },
   toast(msg, ms = 2400) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), ms); },
   setTimer(sec) { const c = $('clock'); c.textContent = String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); $('timer').classList.toggle('low', sec <= 30); },
   setScore(right, tries) { $('score').innerHTML = `Spelled <b>${right}</b> of <b>${tries}</b> on the first try`; },
@@ -43,9 +45,8 @@ function revealHTML(word) {
   if (i < 0) return w;
   return `${w.slice(0, i)}<span class="team${word.heart ? ' heart' : ''}">${w.slice(i, i + t.length)}</span>${w.slice(i + t.length)}`;
 }
-/* cb: { onFirst(right) – scored try, onEarn() – item earned, onClose() } */
+/* cb: { onFirst(right) – scored try, onEarn() – item earned, onClose(earned) } */
 UI.spell = (word, forName, cb) => {
-  UI.busy = true;
   const card = $('spellCard'), input = $('spellInput'), prompt = $('spellPrompt'), reveal = $('spellReveal'), speak = $('spellSpeak');
   card.hidden = false; card.querySelector('.card').classList.remove('right'); card.querySelector('.row').style.visibility = '';
   $('spellFor').textContent = 'for the ' + forName;
@@ -55,12 +56,12 @@ UI.spell = (word, forName, cb) => {
   setTimeout(() => input.focus(), 50);
   play();
   const close = earned => {
-    stopAudio(); card.hidden = true; UI.busy = false;
+    stopAudio(); card.hidden = true;
     input.onkeydown = speak.onclick = $('spellCheck').onclick = $('spellCancel').onclick = null;
-    if (earned) cb.onEarn(); cb.onClose && cb.onClose();
+    if (earned) cb.onEarn(); cb.onClose && cb.onClose(earned);
   };
   const check = () => {
-    if (state === 'show') return;
+    if (state === 'show' || state === 'done') return;
     const guess = input.value.trim().toLowerCase();
     if (!guess) { input.focus(); return; }
     const right = guess === word.w;
@@ -70,7 +71,7 @@ UI.spell = (word, forName, cb) => {
       card.querySelector('.card').classList.add('right');
       reveal.innerHTML = revealHTML(word); reveal.hidden = false; input.hidden = true;
       card.querySelector('.row').style.visibility = 'hidden';
-      prompt.textContent = state === 'done' && word.heart ? 'Yes! (that one is a heart word)' : 'Yes! You spelled it!';
+      prompt.textContent = word.heart ? 'Yes! (that one is a heart word)' : 'Yes! You spelled it!';
       sayWord(word);
       setTimeout(() => close(true), 1400);
       return;
@@ -95,10 +96,9 @@ UI.spell = (word, forName, cb) => {
 
 /* ---------------- side panel (colours, hair, makeup) ---------------- */
 function openPanel(title, onDone) {
-  UI.busy = true;
   const p = $('panel'); p.hidden = false; $('panelTitle').textContent = title;
   $('panelA').innerHTML = ''; $('panelB').innerHTML = '';
-  $('panelDone').onclick = () => { p.hidden = true; UI.busy = false; onDone(); };
+  $('panelDone').onclick = () => { if (!$('spellCard').hidden) return; p.hidden = true; onDone(); };
 }
 function hearts(host, colors, sel, onPick) {
   const h = document.createElement('div'); h.className = 'hearts';
@@ -110,17 +110,29 @@ function hearts(host, colors, sel, onPick) {
   }
   host.appendChild(h);
 }
-function chips(host, items, sel, label, onPick) {
+/* a choice button that may be locked: tapping a locked one asks for a spelled word first.
+   gate = { owned(it) -> bool, earn(it, done(ok)) } */
+function choice(group, b, it, gate, pick) {
+  const lock = () => { if (gate && !gate.owned(it)) { b.classList.add('locked'); b.insertAdjacentHTML('beforeend', LOCK); } };
+  lock();
+  b.onclick = () => {
+    const take = () => { group.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); pick(it); };
+    if (gate && !gate.owned(it)) gate.earn(it, ok => { if (!ok) return; b.classList.remove('locked'); b.querySelector('.lock')?.remove(); take(); });
+    else take();
+  };
+}
+function chips(host, items, sel, label, onPick, gate) {
   const c = document.createElement('div'); c.className = 'chips';
   for (const it of items) {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = label(it);
     if (it === sel) b.classList.add('sel');
-    b.onclick = () => { c.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); onPick(it); };
+    choice(c, b, it, gate, onPick);
     c.appendChild(b);
   }
   host.appendChild(c);
 }
 const h3 = (host, t) => { const e = document.createElement('h3'); e.textContent = t; host.appendChild(e); };
+const note = (host, t) => { const e = document.createElement('p'); e.className = 'pnote'; e.textContent = t; host.appendChild(e); };
 
 UI.colors = (item, palette, prints, onDone) => {
   openPanel(item.def.name, onDone);
@@ -131,32 +143,32 @@ UI.colors = (item, palette, prints, onDone) => {
     chips($('panelB'), prints, item.print || 'solid', p => p[0].toUpperCase() + p.slice(1), p => item.setColor(item.color, p));
   }
 };
-UI.hair = (styles, colors, cur, onPick, onDone) => {
+UI.hair = (styles, colors, cur, onPick, onDone, gate) => {
   openPanel('Hair salon', onDone);
   h3($('panelA'), 'Style');
-  chips($('panelA'), styles, cur.style, s => s.name, s => { cur.style = s; onPick(cur); });
+  chips($('panelA'), styles, cur.style, s => s.name, s => { cur.style = s; onPick(cur); }, gate);
+  if (gate) note($('panelA'), 'Spell a word to unlock a new style.');
   h3($('panelB'), 'Color');
-  const h = document.createElement('div'); h.className = 'hearts';
   hearts($('panelB'), colors.map(c => c.mid), cur.color.mid, m => { cur.color = colors.find(c => c.mid === m); onPick(cur); });
 };
-UI.makeup = (looks, lips, cur, onPick, onDone) => {
+UI.makeup = (looks, lips, cur, onPick, onDone, gate) => {
   openPanel('Makeup', onDone);
   h3($('panelA'), 'Look');
   const t = document.createElement('div'); t.className = 'tiles';
   for (const L of looks) {
     const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<img src="${L.preview}" alt="">${L.name}`;
     if (L === cur.look) b.classList.add('sel');
-    b.onclick = () => { t.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); cur.look = L; cur.lip = null; onPick(cur); };
+    choice(t, b, L, gate, () => { cur.look = L; cur.lip = null; onPick(cur); });
     t.appendChild(b);
   }
   $('panelA').appendChild(t);
+  if (gate) note($('panelA'), 'Spell a word to unlock a new look.');
   h3($('panelB'), 'Lip color');
   hearts($('panelB'), lips, cur.lip, c => { cur.lip = c; onPick(cur); });
 };
 
 /* ---------------- start + end cards ---------------- */
 UI.start = (level, theme, onGo) => {
-  UI.busy = true;
   $('startKicker').textContent = `Level ${level.n} · ${level.wing}`;
   $('startTitle').textContent = level.title;
   $('startTeach').textContent = level.teach;
@@ -164,10 +176,10 @@ UI.start = (level, theme, onGo) => {
   $('startTheme').textContent = theme.name;
   $('startCard').hidden = false;
   $('startListen').onclick = () => sayPattern(level);
-  $('startGo').onclick = () => { stopAudio(); $('startCard').hidden = true; UI.busy = false; onGo(); };
+  $('startGo').onclick = () => { stopAudio(); $('startCard').hidden = true; onGo(); };
 };
 UI.end = (text, next, onAgain) => {
-  UI.busy = true; $('bubble').classList.remove('on');
+  $('bubble').classList.remove('on');
   $('endText').innerHTML = text; $('endNext').innerHTML = next; $('endCard').hidden = false;
   $('endAgain').onclick = onAgain;
 };

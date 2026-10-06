@@ -12,7 +12,7 @@
 <body>
 <canvas id="gl"></canvas>
 <div id="ui">
-  <div id="banner"><div class="ribbon"><span class="t1">Theme:</span> <span id="themeName">Garden Party</span></div><div id="timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" fill="#ffe1ef" stroke="#e2428c" stroke-width="2.2"/><path d="M12 13.5V9.2M12 13.5l3 1.8" stroke="#e2428c" stroke-width="2.2" stroke-linecap="round" fill="none"/><rect x="9.5" y="2.2" width="5" height="2.6" rx="1.2" fill="#e2428c"/></svg><span id="clock">10:00</span></div></div>
+  <div id="banner"><div class="ribbon"><span class="t1">Theme:</span> <span id="themeName">Garden Party</span></div><div id="timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" fill="#ffe1ef" stroke="#e2428c" stroke-width="2.2"/><path d="M12 13.5V9.2M12 13.5l3 1.8" stroke="#e2428c" stroke-width="2.2" stroke-linecap="round" fill="none"/><rect x="9.5" y="2.2" width="5" height="2.6" rx="1.2" fill="#e2428c"/></svg><span id="clock">6:00</span></div></div>
   <div id="level"><div class="lv" id="levelName">Level 1 · Vowel Teams</div><div class="sc" id="score">Spelled <b>0</b> of <b>0</b> on the first try</div></div>
   <div id="plates"></div>
   <button id="bubble" type="button"><span class="ic"></span><span class="lbl">Spell it!</span><span class="key">E</span></button>
@@ -46,8 +46,8 @@
       <h1 id="startTitle">Vowel Teams</h1>
       <p class="teach" id="startTeach"></p>
       <div class="points" id="startPoints"></div>
-      <div class="theme">Theme: <b id="startTheme">Garden Party</b> · 10 minutes</div>
-      <p class="rule">Spell a word to get each piece of clothing. Spell <b>8 out of 10</b> right on the first try to unlock the next wing.</p>
+      <div class="theme">Theme: <b id="startTheme">Garden Party</b> · <span id="startMinutes">6</span> minutes</div>
+      <p class="rule">Spell a word to get each piece of clothing, and to use the hair salon or the makeup vanity. Spell <b>8 out of 10</b> right on the first try to unlock the next wing.</p>
       <div class="row"><button class="btn ghost" id="startListen" type="button">Hear it</button><button class="btn" id="startGo" type="button">Start!</button></div>
     </div>
   </div>

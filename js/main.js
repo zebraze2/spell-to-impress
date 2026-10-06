@@ -16,7 +16,7 @@ import { UI } from './ui.js';
 
 const QS = new URLSearchParams(location.search);
 const THEME = { name: 'Garden Party', tags: ['garden', 'party', 'floral', 'cute', 'summer'], palette: ['#f6a9c4', '#ffb3d0', '#a8e2cc', '#fff2d9', '#c9b3f2', '#86c9e8', '#ffd27a', '#ffffff'] };
-const ROUND = Number(QS.get('seconds')) || 600;
+const ROUND = Number(QS.get('seconds')) || 360;      // 6-minute rounds
 const LEVEL = 0;
 
 /* ---------------- renderer, scene, lights ---------------- */
@@ -77,6 +77,7 @@ const session = makeSession(LEVEL);
 const earned = new Set(), owned = new Map();
 let phase = 'start', remain = ROUND, t = 0, target = null;
 UI.setLevel(LEVELS[LEVEL], THEME); UI.setTimer(ROUND); UI.setScore(0, 0);
+document.getElementById('startMinutes').textContent = Math.max(1, Math.round(ROUND / 60));
 const plates = dolls.map((d, i) => i === 0 ? UI.plate('You', 'New Model', true) : UI.plate(rivals[i - 1].R.name, rivals[i - 1].R.title));
 for (const L of LOOKS) L.preview = lookPreview(ME, L, 110);
 
@@ -102,6 +103,14 @@ function putOn(def) {
   openPanel({ dist: 3.8, pitch: 0.1, y: 0.86, side: 0.9 });
   UI.colors(item, PALETTE, PRINTS, closePanel);
 }
+/* every new thing (clothes, hairstyles, makeup looks) costs one dictated word; colours are free */
+function spellFor(forName, onEarn, onClose) {
+  const { word, retry } = session.next();
+  UI.spell(word, forName, {
+    onFirst: right => { session.record(word, right, retry); UI.setScore(session.firstRight, session.firstTries); },
+    onEarn, onClose,
+  });
+}
 function useItem(it) {
   const def = it.def;
   if (earned.has(def.id)) {
@@ -110,22 +119,29 @@ function useItem(it) {
     else putOn(def);
     return;
   }
-  const { word, retry } = session.next();
-  UI.spell(word, def.name.toLowerCase(), {
-    onFirst: right => { session.record(word, right, retry); UI.setScore(session.firstRight, session.firstTries); },
-    onEarn: () => { earned.add(def.id); putOn(def); },
-  });
+  spellFor(def.name.toLowerCase(), () => { earned.add(def.id); putOn(def); });
+}
+/* the salon chair and the vanity: spell one word to sit down, then every style / look / colour is free.
+   While she's there the computer models wait their turn. */
+function useStation(it) {
+  it.busy = 'player';
+  const done = () => { it.busy = null; closePanel(); };
+  const open = () => {
+    if (it.kind === 'hair') {
+      openPanel({ dist: 1.7, pitch: 0.08, y: 1.55, side: 0.38 });
+      UI.hair(HAIR_STYLES, HAIR_COLORS, { style: player.hairStyle, color: player.hairColor }, cur => { player.setHair(cur.style, cur.color); }, done);
+    } else {
+      openPanel({ dist: 0.95, pitch: 0.03, y: 1.66, side: 0.2 });
+      UI.makeup(LOOKS, LIP_COLORS, { look: player.look, lip: player.lip }, cur => player.setLook(cur.look, cur.lip), done);
+    }
+  };
+  spellFor(it.kind === 'hair' ? 'hair salon' : 'makeup vanity', open, earned => { if (!earned) it.busy = null; });
 }
 function use(it) {
   if (!it || UI.busy || phase !== 'dress') return;
   if (it.kind === 'item') useItem(it);
-  else if (it.kind === 'hair') {
-    openPanel({ dist: 1.7, pitch: 0.08, y: 1.55, side: 0.38 });
-    UI.hair(HAIR_STYLES, HAIR_COLORS, { style: player.hairStyle, color: player.hairColor }, cur => { player.setHair(cur.style, cur.color); }, closePanel);
-  } else if (it.kind === 'makeup') {
-    openPanel({ dist: 0.95, pitch: 0.03, y: 1.66, side: 0.2 });
-    UI.makeup(LOOKS, LIP_COLORS, { look: player.look, lip: player.lip }, cur => player.setLook(cur.look, cur.lip), closePanel);
-  } else if (it.kind === 'door') UI.toast('The runway opens when the timer runs out!');
+  else if (it.kind === 'hair' || it.kind === 'makeup') useStation(it);
+  else if (it.kind === 'door') UI.toast('The runway opens when the timer runs out!');
 }
 function findTarget() {
   const p = player.root.position, h = player.root.rotation.y, fx = Math.sin(h), fz = Math.cos(h);
@@ -210,7 +226,8 @@ function frame(now) {
         _goal.set(C.moveTo.x, 0, C.moveTo.z); steerDir(p, _goal, colliders, _dir);
         const moved = stepDoll(player, _dir, WALK_SPEED * Math.min(1, dist / 0.4 + 0.3), dt, colliders);
         moving = moved > 1e-4;
-        if (!moving) { C.moveTo = null; C.onArrive = null; }
+        C.stuck = moved < dt * 0.25 ? (C.stuck || 0) + dt : 0;          // only give up after being truly stuck
+        if (C.stuck > 0.8) { C.moveTo = null; C.onArrive = null; C.stuck = 0; }
       }
     }
   }
