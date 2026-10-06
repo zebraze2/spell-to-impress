@@ -26,6 +26,7 @@
       <button class="speak" id="spellSpeak" type="button" title="Hear it again"><svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6M17.9 6.8c2.3 3 2.3 7.4 0 10.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
       <div class="prompt" id="spellPrompt">Listen, then spell the word.</div>
       <div class="reveal" id="spellReveal" hidden></div>
+      <div class="fillrow" id="spellFill" hidden></div>
       <input id="spellInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="16" enterkeyhint="done">
       <div class="row"><button class="btn ghost" id="spellCancel" type="button">Not now</button><button class="btn" id="spellCheck" type="button">Check</button></div>
     </div>
@@ -55,10 +56,10 @@
   <!-- end of round -->
   <div class="modal" id="endCard" hidden>
     <div class="card big">
-      <h1>Time's up!</h1>
+      <h1 id="endTitle">Time's up!</h1>
       <p class="teach" id="endText"></p>
       <p class="rule" id="endNext"></p>
-      <div class="row"><button class="btn" id="endAgain" type="button">Play again</button></div>
+      <div class="row" id="endButtons"></div>
     </div>
   </div>
   <div id="loading">Opening the boutique…</div>

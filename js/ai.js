@@ -22,7 +22,7 @@ export const RIVALS = [
 ];
 export const STARTER = [['tee', '#f4f0ee'], ['shorts', '#d9d3cf'], ['sneakers', '#ffffff']];
 
-export function dressStarter(d) { for (const [id, c] of STARTER) d.wear(makeItem(CATALOG.find(x => x.id === id), c, 'solid')); }
+export function dressStarter(d) { for (const [id, c] of STARTER) { const it = makeItem(CATALOG.find(x => x.id === id), c, 'solid'); it.starter = true; d.wear(it); } }
 
 /* choose an outfit that suits the theme (with some personality/randomness) */
 function planOutfit(theme, r, style = []) {
@@ -101,9 +101,9 @@ export function updateRival(a, room, dt, t, colliders) {
         const item = makeItem(def, color, def.printable && a.r() < 0.35 ? ['floral', 'dots', 'gingham', 'solid'][Math.floor(a.r() * 4)] : def.print);
         d.wear(item); ev = { doll: d, kind: 'wear' };
       } else if (a.step.kind === 'hair') {
-        d.setHair(HAIR_STYLES[Math.floor(a.r() * HAIR_STYLES.length)], HAIR_COLORS[Math.floor(a.r() * HAIR_COLORS.length)]); ev = { doll: d, kind: 'wear' };
+        d.setHair(HAIR_STYLES[Math.floor(a.r() * HAIR_STYLES.length)], HAIR_COLORS[Math.floor(a.r() * HAIR_COLORS.length)]); d.styled = true; ev = { doll: d, kind: 'wear' };
       } else if (a.step.kind === 'makeup') {
-        d.setLook(LOOKS[Math.floor(a.r() * LOOKS.length)]); ev = { doll: d, kind: 'wear' };
+        d.setLook(LOOKS[Math.floor(a.r() * LOOKS.length)]); d.styled = true; ev = { doll: d, kind: 'wear' };
       }
       if (a.target.busy === a) a.target.busy = null;
       a.state = 'idle'; a.timer = 0.8 + a.r() * 2.5; a.target = null;

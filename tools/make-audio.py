@@ -36,7 +36,7 @@ kokoro = Kokoro(os.path.join(MODELS, 'kokoro-v1.0.onnx'), os.path.join(MODELS, '
 tok = Tokenizer()
 IPA_FIX = {'ɝ': 'ɜɹ'}
 # said-alone pronunciations, stressed the way a teacher says a dictation word
-PRON = {'peach': 'pˈitʃ.', 'her': 'hˈɜɹ.', 'to': 'tˈuː.', 'snowman': 'snˈoʊmˌæn.', 'cup': 'kˈʌp.', 'pot': 'pˈɑːt.', 'five': 'fˈaɪv.', 'the': 'ðˈʌ.', 'of': 'ˈʌv.'}
+PRON = {'brick': 'bɹˈɪk.', 'chick': 'tʃˈɪk.', 'dish': 'dˈɪʃ.', 'peach': 'pˈitʃ.', 'her': 'hˈɜɹ.', 'to': 'tˈuː.', 'snowman': 'snˈoʊmˌæn.', 'cup': 'kˈʌp.', 'pot': 'pˈɑːt.', 'five': 'fˈaɪv.', 'the': 'ðˈʌ.', 'of': 'ˈʌv.'}
 
 def speed_for(cid):
     if cid.startswith('w_'): return 1.0    # slowing single words down distorts them (checked with Whisper)

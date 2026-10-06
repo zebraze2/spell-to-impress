@@ -1,5 +1,5 @@
 /* HTML overlay: banner, nameplates, the "Spell it!" bubble, spelling card, colour / hair / makeup panels. */
-import { dictate, sayWord, stopAudio, sayPattern } from './spell.js';
+import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js';
 
 const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -10,7 +10,7 @@ export const heartSVG = c => `<svg viewBox="0 0 32 30"><path d="M16 28C5 20 1 14
 
 export const UI = {
   /* something is open on top of the game (read from the page, so nested cards can't get out of step) */
-  get busy() { return ['spellCard', 'panel', 'startCard', 'endCard'].some(id => !$(id).hidden); },
+  get busy() { return ['spellCard', 'panel', 'startCard', 'endCard', 'sortCard'].some(id => { const e = $(id); return e && !e.hidden; }); },
   toast(msg, ms = 2400) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), ms); },
   setTimer(sec) { const c = $('clock'); c.textContent = String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); $('timer').classList.toggle('low', sec <= 30); },
   setScore(right, tries) { $('score').innerHTML = `Spelled <b>${right}</b> of <b>${tries}</b> on the first try`; },
@@ -40,58 +40,151 @@ export const UI = {
 };
 
 /* ---------------- spelling card ---------------- */
-function revealHTML(word) {
-  const w = word.w, t = word.team, i = t ? w.indexOf(t) : -1;
-  if (i < 0) return w;
-  return `${w.slice(0, i)}<span class="team${word.heart ? ' heart' : ''}">${w.slice(i, i + t.length)}</span>${w.slice(i + t.length)}`;
+/* the word with its pattern letters highlighted (chunk can be one string or several) */
+export function revealHTML(word) {
+  const chunks = [].concat(word.chunk || word.team || []), w = word.w, marks = new Array(w.length).fill(false);
+  for (const c of chunks) { const i = w.indexOf(c); if (i >= 0) for (let k = i; k < i + c.length; k++) marks[k] = true; }
+  let out = '', open = false;
+  for (let k = 0; k < w.length; k++) {
+    if (marks[k] && !open) { out += `<span class="team${word.heart ? ' heart' : ''}">`; open = true; }
+    if (!marks[k] && open) { out += '</span>'; open = false; }
+    out += w[k];
+  }
+  return out + (open ? '</span>' : '');
 }
-/* cb: { onFirst(right) – scored try, onEarn() – item earned, onClose(earned) } */
-UI.spell = (word, forName, cb) => {
-  const card = $('spellCard'), input = $('spellInput'), prompt = $('spellPrompt'), reveal = $('spellReveal'), speak = $('spellSpeak');
+function phraseHTML(p, words) {
+  return p.split(' ').map(t => { const w = words.find(x => x.w === t); return w ? revealHTML(w) : t; }).join(' ');
+}
+/* The spelling card.
+   mode 'word'   : hear it, spell the whole word
+   mode 'fill'   : see the word with the new sound missing, type just those letters (scaffold)
+   mode 'phrase' : hear a short phrase, spell all of it
+   cb: { onFirst(right) – the scored first try, onEarn(), onClose(earned) } */
+UI.spell = (word, forName, cb, { mode = 'word', phrase = '', words = [] } = {}) => {
+  const card = $('spellCard'), input = $('spellInput'), prompt = $('spellPrompt'), reveal = $('spellReveal'), speak = $('spellSpeak'), fillRow = $('spellFill');
+  const target = mode === 'phrase' ? phrase : mode === 'fill' ? word.chunk : word.w;
+  const ask = { word: 'Listen, then spell the word.', fill: 'Which letters make the missing sound?', phrase: 'Listen, then spell the whole phrase.' }[mode];
   card.hidden = false; card.querySelector('.card').classList.remove('right'); card.querySelector('.row').style.visibility = '';
-  $('spellFor').textContent = 'for the ' + forName;
-  reveal.hidden = true; input.hidden = false; input.value = ''; prompt.textContent = 'Listen, then spell the word.';
-  let state = 'ask', first = true;
-  const play = () => { speak.classList.add('playing'); dictate(word).then(() => speak.classList.remove('playing')); };
-  setTimeout(() => input.focus(), 50);
-  play();
+  card.querySelector('.card').classList.toggle('wide', mode === 'phrase');
+  $('spellFor').textContent = forName;
+  input.maxLength = mode === 'phrase' ? 40 : 16;
+  let state = 'ask', first = true, box = null;
+  const showAsk = () => {
+    reveal.hidden = true; prompt.textContent = state === 'retype' ? (mode === 'fill' ? 'Now fill it in again.' : 'Now spell it from memory.') : ask;
+    if (mode === 'fill') {
+      const i = word.w.indexOf(word.chunk);
+      fillRow.innerHTML = `<span>${word.w.slice(0, i)}</span><input class="chunk" maxlength="3" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><span>${word.w.slice(i + word.chunk.length)}</span>`;
+      fillRow.hidden = false; input.hidden = true; box = fillRow.querySelector('input');
+    } else { fillRow.hidden = true; input.hidden = false; input.value = ''; box = input; }
+    box.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); check(); } e.stopPropagation(); };
+    box.oninput = () => { box.value = mode === 'phrase' ? box.value.toLowerCase().replace(/[^a-z ]/g, '').replace(/ {2,}/g, ' ') : box.value.replace(/[^a-zA-Z]/g, '').toLowerCase(); };
+    setTimeout(() => box.focus(), 50);
+  };
+  const play = () => {
+    speak.classList.add('playing');
+    (mode === 'phrase' ? dictatePhrase(phrase) : dictate(word)).then(() => speak.classList.remove('playing'));
+  };
+  const showAnswer = () => { reveal.innerHTML = mode === 'phrase' ? phraseHTML(phrase, words) : revealHTML(word); reveal.hidden = false; input.hidden = true; fillRow.hidden = true; };
+  showAsk(); play();
   const close = earned => {
     stopAudio(); card.hidden = true;
-    input.onkeydown = speak.onclick = $('spellCheck').onclick = $('spellCancel').onclick = null;
+    speak.onclick = $('spellCheck').onclick = $('spellCancel').onclick = null;
     if (earned) cb.onEarn(); cb.onClose && cb.onClose(earned);
   };
   const check = () => {
     if (state === 'show' || state === 'done') return;
-    const guess = input.value.trim().toLowerCase();
-    if (!guess) { input.focus(); return; }
-    const right = guess === word.w;
+    const guess = box.value.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!guess) { box.focus(); return; }
+    const right = guess === target;
     if (first) { cb.onFirst(right); first = false; }
     if (right) {
       state = 'done';
       card.querySelector('.card').classList.add('right');
-      reveal.innerHTML = revealHTML(word); reveal.hidden = false; input.hidden = true;
+      showAnswer();
       card.querySelector('.row').style.visibility = 'hidden';
-      prompt.textContent = word.heart ? 'Yes! (that one is a heart word)' : 'Yes! You spelled it!';
-      sayWord(word);
-      setTimeout(() => close(true), 1400);
+      prompt.textContent = mode === 'phrase' ? 'Yes! Off to the runway!' : 'Yes! You spelled it!';
+      if (mode !== 'phrase') sayWord(word);
+      setTimeout(() => close(true), mode === 'phrase' ? 1800 : 1400);
       return;
     }
     // corrected test: look at it, hear it, then write it again from memory
     state = 'show';
-    input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
-    reveal.innerHTML = revealHTML(word); reveal.hidden = false; input.hidden = true;
-    prompt.textContent = word.heart ? 'It is spelled like this. The purple part is the tricky part.' : 'It is spelled like this. Look at the pink letters.';
-    sayWord(word);
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
     setTimeout(() => {
-      state = 'retype'; reveal.hidden = true; input.hidden = false; input.value = '';
-      prompt.textContent = 'Now spell it from memory.'; input.focus();
-    }, 2800);
+      showAnswer();
+      prompt.textContent = mode === 'phrase' ? 'It is spelled like this. Look at the pink letters.' : 'It is spelled like this. Look at the pink letters.';
+      if (mode === 'phrase') dictatePhrase(phrase); else sayWord(word);
+    }, 350);
+    setTimeout(() => { state = 'retype'; showAsk(); }, mode === 'phrase' ? 4200 : 3000);
   };
-  input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); check(); } e.stopPropagation(); };
-  input.oninput = () => { input.value = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase(); };
   speak.onclick = play;
   $('spellCheck').onclick = check;
   $('spellCancel').onclick = () => close(false);
+  $('spellCancel').hidden = !!cb.noCancel;
+};
+
+/* ---------------- word sort (opens the salon / vanity) ----------------
+   Read the words and put each one in its pattern's box. Tap a word to hear it. */
+UI.sort = (title, ideas, words, onDone) => {
+  let m = $('sortCard');
+  if (!m) {
+    m = document.createElement('div'); m.className = 'modal'; m.id = 'sortCard';
+    m.innerHTML = `<div class="card sortcard"><div class="for" id="sortFor"></div><div class="prompt">Read each word and drag it to its box.</div>
+      <div class="words" id="sortWords"></div><div class="bins" id="sortBins"></div><div class="hint" id="sortHint"></div>
+      <div class="row"><button class="btn ghost" id="sortCancel" type="button">Not now</button></div></div>`;
+    $('ui').appendChild(m);
+  }
+  m.hidden = false; $('sortFor').textContent = title; $('sortHint').textContent = ''; $('sortCancel').style.visibility = '';
+  const W = $('sortWords'), B = $('sortBins');
+  W.innerHTML = ''; B.innerHTML = '';
+  let picked = null, left = words.length;
+  const bins = ideas.map(idea => {
+    const b = document.createElement('div'); b.className = 'bin'; b.dataset.idea = idea.id;
+    b.innerHTML = `<div class="blabel">${idea.label}</div><div class="bslot"></div>`;
+    B.appendChild(b); return b;
+  });
+  const place = (card, bin) => {
+    const w = card._w;
+    if (bin.dataset.idea === w.idea) {
+      card.classList.remove('picked'); card.classList.add('placed'); card.innerHTML = revealHTML(w);
+      bin.querySelector('.bslot').appendChild(card); card.onpointerdown = null; picked = null; left--;
+      $('sortHint').textContent = '';
+      if (left === 0) { $('sortHint').textContent = 'Sorted! Nice reading.'; $('sortCancel').style.visibility = 'hidden'; setTimeout(() => { m.hidden = true; onDone(true); }, 1100); }
+    } else {
+      card.classList.remove('picked'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+      $('sortHint').textContent = `Look closely: which letters make the sound in "${w.w}"?`;
+      picked = null;
+    }
+  };
+  for (const w of words) {
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'wcard'; c.textContent = w.w; c._w = w;
+    // drag (mouse or finger) or tap-then-tap
+    c.onpointerdown = e => {
+      e.preventDefault(); sayWord(w);
+      const r = c.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
+      let moved = false;
+      const move = ev => {
+        if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 6) return;
+        moved = true; c.classList.add('dragging');
+        Object.assign(c.style, { position: 'fixed', left: ev.clientX - ox + 'px', top: ev.clientY - oy + 'px', width: r.width + 'px', zIndex: 20 });
+      };
+      const up = ev => {
+        removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+        c.classList.remove('dragging'); Object.assign(c.style, { position: '', left: '', top: '', width: '', zIndex: '' });
+        if (moved) {
+          const bin = bins.find(b => { const br = b.getBoundingClientRect(); return ev.clientX >= br.left && ev.clientX <= br.right && ev.clientY >= br.top && ev.clientY <= br.bottom; });
+          if (bin) place(c, bin);
+        } else {
+          W.querySelectorAll('.picked').forEach(x => x.classList.remove('picked'));
+          picked = c; c.classList.add('picked'); $('sortHint').textContent = 'Now tap the box it goes in.';
+        }
+      };
+      addEventListener('pointermove', move); addEventListener('pointerup', up);
+    };
+    W.appendChild(c);
+  }
+  for (const b of bins) b.onclick = () => { if (picked) place(picked, b); };
+  $('sortCancel').onclick = () => { stopAudio(); m.hidden = true; onDone(false); };
 };
 
 /* ---------------- side panel (colours, hair, makeup) ---------------- */
@@ -171,16 +264,39 @@ UI.makeup = (looks, lips, cur, onPick, onDone, gate) => {
 UI.start = (level, theme, onGo) => {
   $('startKicker').textContent = `Level ${level.n} · ${level.wing}`;
   $('startTitle').textContent = level.title;
-  $('startTeach').textContent = level.teach;
-  $('startPoints').innerHTML = level.points.map(([a, b]) => `<div><b>${a}</b><span>${b}</span></div>`).join('');
+  $('startTeach').textContent = 'Two new spelling ideas:';
+  $('startPoints').innerHTML = level.ideas.map(i => `<div><b>${i.label}</b><span>${i.rule} <i>${i.eg}</i></span></div>`).join('');
   $('startTheme').textContent = theme.name;
   $('startCard').hidden = false;
   $('startListen').onclick = () => sayPattern(level);
   $('startGo').onclick = () => { stopAudio(); $('startCard').hidden = true; onGo(); };
 };
-UI.end = (text, next, onAgain) => {
+UI.end = (title, text, next, buttons) => {
   $('bubble').classList.remove('on');
+  $('endTitle').textContent = title;
   $('endText').innerHTML = text; $('endNext').innerHTML = next; $('endCard').hidden = false;
-  $('endAgain').onclick = onAgain;
+  const row = $('endButtons'); row.innerHTML = '';
+  for (const [label, fn, ghost] of buttons) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (ghost ? ' ghost' : ''); b.textContent = label; b.onclick = fn; row.appendChild(b); }
+};
+
+/* ---------------- runway: voting stars, pose buttons, podium labels ---------------- */
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 1.6l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.6l-6.4 3.6 1.4-7.1-5.3-5 7.2-.9z"/></svg>';
+UI.runwayBar = (theme, name, mine, onVote, onPose) => {
+  let bar = $('voteBar');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'voteBar'; $('ui').appendChild(bar); }
+  bar.hidden = false; bar.className = mine ? 'mine' : '';
+  bar.innerHTML = `<div class="vtop"><div class="vtheme">Theme: <b>${theme}</b></div><div class="vname">${mine ? 'Your turn! Strike a pose!' : name + ' is walking'}</div><div class="vtime" id="voteTime"></div></div>`
+    + (mine ? `<div class="poses"><button type="button" data-p="hip">Hand on hip</button><button type="button" data-p="wave">Wave</button><button type="button" data-p="twirl">Twirl</button></div>`
+      : `<div class="stars">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-n="${n}">${STAR}</button>`).join('')}</div>`);
+  bar.querySelectorAll('.stars button').forEach(b => b.onclick = () => {
+    const n = +b.dataset.n; bar.querySelectorAll('.stars button').forEach(x => x.classList.toggle('on', +x.dataset.n <= n)); onVote(n);
+  });
+  bar.querySelectorAll('.poses button').forEach(b => b.onclick = () => onPose(b.dataset.p));
+};
+UI.voteTime = s => { const t = $('voteTime'); if (t) t.textContent = s > 0 ? `You have ${s}s to vote!` : ''; };
+UI.runwayHide = () => { const b = $('voteBar'); if (b) b.hidden = true; };
+UI.flashStars = (x, y, avg) => {
+  const s = document.createElement('div'); s.className = 'starpop'; s.innerHTML = `${STAR}<b>${avg.toFixed(1)}</b>`;
+  Object.assign(s.style, { left: x + 'px', top: y + 'px' }); $('ui').appendChild(s); setTimeout(() => s.remove(), 2600);
 };
 UI.loaded = () => { const l = $('loading'); if (!l) return; l.classList.add('gone'); setTimeout(() => l.remove(), 700); };
