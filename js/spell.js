@@ -6,7 +6,7 @@
    - In a round: missed words first, then unseen ones; a known word is mixed in now and then (spaced review).
      The first words of each idea are "fill the sound"; a missed word comes back a few words later.
    - First tries count toward the 80% that unlocks the next wing. */
-import { LEVELS, phraseId } from './words.js?v=2e31e9be';
+import { LEVELS, phraseId } from './words.js?v=51cc4124';
 
 export const PASS = 0.8;
 export const MIN_TRIES = 8;          // need at least this many scored tries in a round to unlock the next wing
@@ -15,6 +15,7 @@ const KEY = 'sti-progress-v3';
 const FILL_PER_IDEA = 2;
 
 export function loadProgress() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
+export function resetProgress() { try { localStorage.removeItem(KEY); } catch { /* private mode */ } }
 export function saveProgress(p) { try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* private mode */ } }
 function shuffle(a, r = Math.random) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 

@@ -1,6 +1,6 @@
 /* Canvas-painted textures: room surfaces, fabric prints (re-tintable), hair strands, sparkles. */
 import * as THREE from 'three';
-import { TAU, rng, canvasTex, hexA, shade } from './util.js?v=2e31e9be';
+import { TAU, rng, canvasTex, hexA, shade } from './util.js?v=51cc4124';
 
 export const TEX = {};
 

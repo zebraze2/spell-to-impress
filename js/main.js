@@ -4,20 +4,21 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=2e31e9be';
-import { buildDoll, animateDoll } from './doll.js?v=2e31e9be';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=2e31e9be';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=2e31e9be';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=2e31e9be';
-import { PRINTS, TEX } from './textures.js?v=2e31e9be';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=2e31e9be';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=2e31e9be';
-import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=2e31e9be';
-import { LEVELS } from './words.js?v=2e31e9be';
-import { buildRunway, makeShow, RW } from './runway.js?v=2e31e9be';
-import { UI } from './ui.js?v=2e31e9be';
+import { buildRoom } from './room.js?v=51cc4124';
+import { buildDoll, animateDoll } from './doll.js?v=51cc4124';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=51cc4124';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=51cc4124';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=51cc4124';
+import { PRINTS, TEX } from './textures.js?v=51cc4124';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=51cc4124';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=51cc4124';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=51cc4124';
+import { LEVELS } from './words.js?v=51cc4124';
+import { buildRunway, makeShow, RW } from './runway.js?v=51cc4124';
+import { UI } from './ui.js?v=51cc4124';
 
 const QS = new URLSearchParams(location.search);
+if (QS.has('reset')) { resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }   // ?reset starts over (for play-testing)
 const PLAYABLE = 2;                                   // levels built so far
 const UNLOCKED = QS.has('unlock') ? PLAYABLE : Math.min(PLAYABLE, unlockedLevel());
 const LEVEL = Math.max(1, Math.min(UNLOCKED, Number(QS.get('level')) || loadProgress().last || 1)) - 1;
