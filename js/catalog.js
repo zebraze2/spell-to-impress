@@ -1,9 +1,9 @@
 /* The shop catalog for the first wing, and how each item is shown on a mannequin. */
 import * as THREE from 'three';
-import { wrapItem } from './clothes.js?v=2271898f';
-import { buildDress, buildGown, buildTop, buildSkirt, buildPants } from './garments-body.js?v=2271898f';
-import { buildShoes, buildHat, buildNecklace, buildGloves } from './garments-acc.js?v=2271898f';
-import { buildDoll, mannequinShow, poseNeutral } from './doll.js?v=2271898f';
+import { wrapItem } from './clothes.js?v=2e31e9be';
+import { buildDress, buildGown, buildTop, buildSkirt, buildPants } from './garments-body.js?v=2e31e9be';
+import { buildShoes, buildHat, buildNecklace, buildGloves } from './garments-acc.js?v=2e31e9be';
+import { buildDoll, mannequinShow, poseNeutral } from './doll.js?v=2e31e9be';
 
 const KINDS = { dress: buildDress, gown: buildGown, top: buildTop, skirt: buildSkirt, pants: buildPants, shoes: buildShoes, hat: buildHat, neck: buildNecklace, gloves: buildGloves };
 
@@ -43,6 +43,23 @@ export const CATALOG = [
   { id: 'pearls', name: 'Pearls', slot: 'neck', kind: 'neck', display: 'neck', color: '#fff4ec', p: { style: 'pearls' }, tags: ['elegant', 'garden', 'formal', 'party'] },
   { id: 'heart', name: 'Heart necklace', slot: 'neck', kind: 'neck', display: 'neck', color: '#ff5f9e', p: { style: 'heart' }, tags: ['cute', 'party', 'casual'] },
   { id: 'gloves', name: 'Long gloves', slot: 'hands', kind: 'gloves', display: 'hands', color: '#ffffff', p: {}, tags: ['formal', 'royal', 'glam'] },
+  // ---- Party Wing (Level 2): new pieces built from the same garment shapes ----
+  { id: 'partydress', name: 'Party dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#e0457b', print: 'sparkle', p: { sleeves: 'none', chestBow: true, skirt: { yHem: -0.38, rHem: [0.4, 0.35], folds: 15, foldAmp: 0.03 }, frill: { y: -0.38, r: [0.4, 0.35], drop: 0.05, n: 48 } }, tags: ['party', 'birthday', 'glam', 'cute', 'disco'] },
+  { id: 'stargown', name: 'Star gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#9b6ad8', print: 'sparkle', p: { tiers: 1 }, tags: ['royal', 'formal', 'glam', 'party', 'elegant'] },
+  { id: 'disco', name: 'Disco dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#c9d2e8', print: 'sparkle', p: { neck: 'halter', sleeves: 'none', sashBow: false, skirt: { yHem: -0.3, rHem: [0.3, 0.27], folds: 20, foldAmp: 0.012, flare: 0.9 } }, tags: ['disco', 'glam', 'party'] },
+  { id: 'sparklecami', name: 'Sparkle top', slot: 'top', kind: 'top', display: 'bust', printable: true, color: '#e9c48a', print: 'sparkle', p: { neck: 'sweetheart', sleeves: 'straps' }, tags: ['glam', 'party', 'disco'] },
+  { id: 'stripetop', name: 'Striped top', slot: 'top', kind: 'top', display: 'bust', printable: true, color: '#e0457b', print: 'stripes', p: { neck: 'crew', sleeves: 'long' }, tags: ['birthday', 'casual', 'cute', 'school'] },
+  { id: 'maxiskirt', name: 'Maxi skirt', slot: 'bottom', kind: 'skirt', display: 'hips', printable: true, color: '#c9b3f2', print: 'dots', p: { skirt: { yHem: -0.9, rHem: [0.34, 0.3], folds: 9, flare: 1.1 } }, tags: ['party', 'elegant', 'cute', 'birthday'] },
+  { id: 'partypants', name: 'Party pants', slot: 'bottom', kind: 'pants', display: 'hips', printable: true, color: '#3b2a66', print: 'sparkle', p: { flare: 0.02 }, tags: ['glam', 'disco', 'party'] },
+  { id: 'goldheels', name: 'Gold heels', slot: 'shoes', kind: 'shoes', display: 'shoes', color: '#e9c48a', p: { style: 'heels' }, tags: ['glam', 'formal', 'party', 'disco', 'royal'] },
+  { id: 'partyhat', name: 'Party hat', slot: 'head', kind: 'hat', display: 'head', color: '#ff8fb8', p: { style: 'party' }, tags: ['birthday', 'party', 'cute'] },
+];
+/* what each wing's shop shows: 6 dress forms + 4 shelf niches of 6 (null = empty spot) */
+export const WINGS = [
+  { name: 'Garden Wing', forms: ['sundress', 'coquette', 'picnic', 'maxi', 'gown', 'princess'],
+    shelves: ['blouse', 'tee', 'cami', 'sweater', 'bowtop', 'gloves', 'aline', 'mini', 'tutu', 'jeans', 'shorts', null, 'maryjanes', 'heels', 'sneakers', 'boots', 'pearls', 'heart', 'sunhat', 'tiara', 'crown', 'beret', 'bows', null] },
+  { name: 'Party Wing', tint: { wall: '#ece2f8', niche: '#cbb4ee', velvet: '#c9a8f0', rug: '#e6d6ff' }, forms: ['partydress', 'stargown', 'disco', 'princess', 'gown', 'coquette'],
+    shelves: ['sparklecami', 'stripetop', 'bowtop', 'blouse', 'cami', 'gloves', 'maxiskirt', 'partypants', 'tutu', 'mini', 'aline', null, 'goldheels', 'heels', 'maryjanes', 'sneakers', 'pearls', 'heart', 'partyhat', 'tiara', 'bows', 'crown', 'beret', null] },
 ];
 export const byId = id => CATALOG.find(d => d.id === id);
 

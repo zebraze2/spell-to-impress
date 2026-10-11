@@ -1,11 +1,11 @@
 /* Builders for shoes, headwear, necklaces and gloves. */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, smoothSeams, cached, limbLathe, crSample } from './util.js?v=2271898f';
-import { CHEST_KEYS, ARM_KEYS, FARM_KEYS, ringAt, headShape, mittenGeo } from './doll.js?v=2271898f';
-import { fabric } from './clothes.js?v=2271898f';
-import { TEX } from './textures.js?v=2271898f';
-import { makeBow, shinTubeGeo } from './garment-shapes.js?v=2271898f';
+import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, smoothSeams, cached, limbLathe, crSample } from './util.js?v=2e31e9be';
+import { CHEST_KEYS, ARM_KEYS, FARM_KEYS, ringAt, headShape, mittenGeo } from './doll.js?v=2e31e9be';
+import { fabric } from './clothes.js?v=2e31e9be';
+import { TEX } from './textures.js?v=2e31e9be';
+import { makeBow, shinTubeGeo } from './garment-shapes.js?v=2e31e9be';
 
 const mesh = (geo, mat) => new THREE.Mesh(geo, mat);
 export const pearlMat = new THREE.MeshStandardMaterial({ color: '#fff4ec', roughness: 0.16, emissive: '#3a2a30', emissiveIntensity: 0.25 });
@@ -119,6 +119,14 @@ export function buildHat(p) {
       const lf = mesh(cached('crownleaf', () => new THREE.SphereGeometry(0.012, 8, 6)), leaf); lf.position.copy(v).multiplyScalar(1.01); lf.position.y -= 0.012; lf.scale.set(1.6, 0.5, 1); grp.add(lf);
     }
     main.push(petal);
+  } else if (p.style === 'party') {           // cone party hat with a pom-pom
+    const m = fabric(0.45), white = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8 });
+    const cone = mesh(cached('partycone', () => { const g = new THREE.ConeGeometry(0.075, 0.2, 32, 1, true); g.translate(0, 0.1, 0); return g; }), m); m.side = THREE.DoubleSide; grp.add(cone);
+    const pom = mesh(cached('partypom', () => new THREE.SphereGeometry(0.026, 14, 10)), white); pom.position.y = 0.205; grp.add(pom);
+    const ruff = mesh(cached('partyruff', () => new THREE.TorusGeometry(0.075, 0.012, 8, 28)), white); ruff.rotation.x = Math.PI / 2; ruff.position.y = 0.005; grp.add(ruff);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, y = 0.05 + (i % 3) * 0.045, r = 0.075 * (1 - y / 0.2) + 0.002; const d = mesh(cached('partydot', () => new THREE.SphereGeometry(0.009, 8, 6)), white); d.position.set(Math.cos(a) * r, y, Math.sin(a) * r); grp.add(d); }
+    grp.position.set(0.035, 0.168, 0.0); grp.rotation.set(-0.08, 0, -0.26);
+    main.push(m);
   } else if (p.style === 'bows') {            // a pair of big hair bows
     const m = fabric(0.35);
     for (const s of [-1, 1]) { const b = makeBow(m, 1.6); b.position.set(s * 0.12, 0.17, -0.02); b.rotation.set(-0.3, s * 0.9, s * -0.25); grp.add(b); }

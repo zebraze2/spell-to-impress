@@ -4,30 +4,40 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=2271898f';
-import { buildDoll, animateDoll } from './doll.js?v=2271898f';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=2271898f';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=2271898f';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=2271898f';
-import { PRINTS, TEX } from './textures.js?v=2271898f';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=2271898f';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=2271898f';
-import { makeSession, PASS, MIN_TRIES, loadProgress, saveProgress } from './spell.js?v=2271898f';
-import { LEVELS } from './words.js?v=2271898f';
-import { buildRunway, makeShow, RW } from './runway.js?v=2271898f';
-import { UI } from './ui.js?v=2271898f';
+import { buildRoom } from './room.js?v=2e31e9be';
+import { buildDoll, animateDoll } from './doll.js?v=2e31e9be';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=2e31e9be';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=2e31e9be';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=2e31e9be';
+import { PRINTS, TEX } from './textures.js?v=2e31e9be';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=2e31e9be';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=2e31e9be';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=2e31e9be';
+import { LEVELS } from './words.js?v=2e31e9be';
+import { buildRunway, makeShow, RW } from './runway.js?v=2e31e9be';
+import { UI } from './ui.js?v=2e31e9be';
 
 const QS = new URLSearchParams(location.search);
-const THEMES = [
-  { name: 'Garden Party', tags: ['garden', 'party', 'floral', 'cute', 'summer'], palette: ['#f6a9c4', '#ffb3d0', '#a8e2cc', '#fff2d9', '#c9b3f2', '#86c9e8', '#ffd27a', '#ffffff'] },
-  { name: 'Royal Ball', tags: ['royal', 'formal', 'glam', 'elegant', 'party'], palette: ['#24306e', '#c9b3f2', '#ffffff', '#e9c48a', '#f7b6d0', '#9b6ad8', '#e0457b'] },
-  { name: 'Beach Day', tags: ['beach', 'summer', 'casual', 'sporty'], palette: ['#86c9e8', '#ffd27a', '#ff9a6a', '#ffffff', '#a8e2cc', '#f06aa0'] },
-  { name: 'Cozy Day', tags: ['cozy', 'winter', 'casual', 'school'], palette: ['#c9b3f2', '#7a4a32', '#fff2d9', '#e86a8a', '#3b2a26', '#e9c48a'] },
-  { name: 'School Day', tags: ['school', 'casual', 'cute'], palette: ['#7a8fd6', '#ffffff', '#c43b3b', '#ffd27a', '#5b7fc0', '#f6a9c4'] },
+const PLAYABLE = 2;                                   // levels built so far
+const UNLOCKED = QS.has('unlock') ? PLAYABLE : Math.min(PLAYABLE, unlockedLevel());
+const LEVEL = Math.max(1, Math.min(UNLOCKED, Number(QS.get('level')) || loadProgress().last || 1)) - 1;
+const THEME_SETS = [
+  [ // Garden Wing
+    { name: 'Garden Party', tags: ['garden', 'party', 'floral', 'cute', 'summer'], palette: ['#f6a9c4', '#ffb3d0', '#a8e2cc', '#fff2d9', '#c9b3f2', '#86c9e8', '#ffd27a', '#ffffff'] },
+    { name: 'Beach Day', tags: ['beach', 'summer', 'casual', 'sporty'], palette: ['#86c9e8', '#ffd27a', '#ff9a6a', '#ffffff', '#a8e2cc', '#f06aa0'] },
+    { name: 'Cozy Day', tags: ['cozy', 'winter', 'casual', 'school'], palette: ['#c9b3f2', '#7a4a32', '#fff2d9', '#e86a8a', '#3b2a26', '#e9c48a'] },
+    { name: 'School Day', tags: ['school', 'casual', 'cute'], palette: ['#7a8fd6', '#ffffff', '#c43b3b', '#ffd27a', '#5b7fc0', '#f6a9c4'] },
+  ],
+  [ // Party Wing
+    { name: 'Birthday Party', tags: ['birthday', 'party', 'cute'], palette: ['#ff8fb8', '#ffd27a', '#86c9e8', '#c9b3f2', '#ffffff', '#e0457b', '#a8e2cc'] },
+    { name: 'Royal Ball', tags: ['royal', 'formal', 'glam', 'elegant', 'party'], palette: ['#24306e', '#c9b3f2', '#ffffff', '#e9c48a', '#f7b6d0', '#9b6ad8', '#e0457b'] },
+    { name: 'Disco Night', tags: ['disco', 'glam', 'party'], palette: ['#c9d2e8', '#9b6ad8', '#e0457b', '#e9c48a', '#3b2a66', '#1d181f', '#ffffff'] },
+    { name: 'Movie Star', tags: ['glam', 'formal', 'elegant', 'royal'], palette: ['#c43b3b', '#e9c48a', '#1d181f', '#ffffff', '#f7b6d0', '#24306e'] },
+  ],
 ];
+const THEMES = THEME_SETS[LEVEL];
 const THEME = THEMES.find(t => t.name.toLowerCase().replace(/ /g, '') === (QS.get('theme') || '').toLowerCase()) || THEMES[Math.floor(Math.random() * THEMES.length)];
 const ROUND = Number(QS.get('seconds')) || 360;      // 6-minute rounds
-const LEVEL = 0;
 
 /* ---------------- renderer, scene, lights ---------------- */
 const canvas = document.getElementById('gl');
@@ -61,7 +71,7 @@ const rim = new THREE.DirectionalLight('#ff9fcd', 1.1); rim.position.set(3, 4, -
 const fill = new THREE.DirectionalLight('#e9e2ff', 0.45); fill.position.set(5, 3, 5); scene.add(fill);
 
 /* ---------------- world ---------------- */
-const room = buildRoom();
+const room = buildRoom(LEVEL);
 scene.add(room.group);
 const colliders = room.colliders;
 const hall = buildRunway(THEME);
@@ -116,7 +126,8 @@ function putOn(def) {
   if (!item) { item = makeItem(def); owned.set(def.id, item); }
   player.wear(item); ensureBasics(player); sparkleAt(player);
   openPanel({ dist: 3.8, pitch: 0.1, y: 0.86, side: 0.9 });
-  UI.colors(item, PALETTE, PRINTS, closePanel);
+  UI.colors(item, PALETTE, PRINTS, closePanel, (kind, done) => spellFor((kind === 'colors' ? 'colors' : 'patterns') + ' of the ' + def.name.toLowerCase(),
+    () => { if (kind === 'colors') item.colorsOpen = true; else item.printsOpen = true; }, done));
 }
 /* each piece of clothing costs one word: a whole dictated word, or (early on) just the new sound */
 function spellFor(forName, onEarn, onClose) {
@@ -221,13 +232,17 @@ function phraseForRunway() {
     }, { mode: 'word' });
   }
 }
+/* the runway hall is the stage for the pop quiz and for the show */
+function stage(on) {
+  room.group.visible = !on; hall.group.visible = on;
+  for (const p of plates) p.style.visibility = 'hidden';
+  for (const id of ['level', 'banner', 'help']) document.getElementById(id).style.display = on ? 'none' : '';
+  scene.background.set(on ? '#2b1426' : '#efe1da'); scene.fog.color.set(on ? '#2b1426' : '#efdcd8'); scene.fog.near = on ? 18 : 12; scene.fog.far = on ? 40 : 32;
+  key.castShadow = !on;
+}
 function startShow() {
   phase = 'show';
-  room.group.visible = false; hall.group.visible = true;
-  for (const p of plates) p.style.visibility = 'hidden';
-  document.getElementById('level').style.display = 'none'; document.getElementById('banner').style.display = 'none';
-  scene.background.set('#2b1426'); scene.fog.color.set('#2b1426'); scene.fog.near = 18; scene.fog.far = 40;
-  key.castShadow = false;
+  stage(true);
   show = makeShow({
     hall, camera, theme: THEME,
     models: dolls.map((d, i) => ({ d, name: names[i][0], mine: i === 0, i })),
@@ -248,17 +263,64 @@ function results(ranked) {
     phase = 'results';
     session.save();
     const pct = Math.round(session.score() * 100), enough = session.firstTries >= MIN_TRIES, pass = enough && session.score() >= PASS;
-    if (pass) { const p = loadProgress(); p.unlocked = Math.max(p.unlocked || 1, LEVEL + 2); saveProgress(p); }
+    if (pass) unlock(LEVEL + 2);
     const title = place === 1 ? 'You won 1st place!' : place <= 3 ? `You placed ${ordinal(place)}!` : `You placed ${ordinal(place)}`;
     const text = `The judges gave your ${THEME.name} look <b>★ ${mine.avg.toFixed(1)}</b>.<br>You spelled <b>${session.firstRight}</b> of <b>${session.firstTries}</b> right on the first try: <b>${pct}%</b>.`;
-    const next = pass ? `You unlocked the <b>${LEVELS[LEVEL + 1].wing}</b>! Level 2 is coming next.`
+    const built = LEVEL + 2 <= PLAYABLE;
+    const next = pass ? (built ? `You unlocked the <b>${LEVELS[LEVEL + 1].wing}</b>!` : 'You passed every wing that is open so far. More wings are coming!')
       : !enough ? `Spell at least ${MIN_TRIES} words in a round (and get 80% right) to unlock the next wing.`
       : 'Spell 80% right on the first try to unlock the next wing. You can do it!';
-    UI.end(title, text, next, [['Play again', () => location.reload()]]);
+    const buttons = [['Play again', () => goLevel(LEVEL + 1), pass && built]];
+    if (pass && built) buttons.unshift([`Go to Level ${LEVEL + 2}`, () => goLevel(LEVEL + 2)]);
+    buttons.push(['All wings', () => { location.search = ''; }, true]);
+    UI.end(title, text, next, buttons);
   }, 3200);
 }
-UI.start(level, THEME, startRound);
-if (QS.has('skipstart')) document.getElementById('startGo').click();
+function goLevel(n) { const q = new URLSearchParams(); q.set('level', n); q.set('go', '1'); for (const k of ['seconds', 'unlock']) if (QS.has(k)) q.set(k, QS.get(k)); location.search = '?' + q; }
+
+/* ---------------- pop quiz on the stage ---------------- */
+const quizSpot = new THREE.Vector3(RW.x - 1.25, RW.top, RW.z + RW.end - 0.4);
+function startQuiz() {
+  phase = 'quiz'; stage(true);
+  for (const a of rivals) { a.d.root.visible = false; a.d.blob.visible = false; }
+  player.root.position.copy(quizSpot); player.root.rotation.y = 0.35; player.blob.visible = false; player.anim.speed = 0;
+  UI.quizIntro(level, QUIZ_SIZE, runQuiz);
+}
+function runQuiz() {
+  const words = quizSet(level), results = []; let streak = 0;
+  const hud = () => UI.quizHud(results.map(r => r.right), words.length, streak);
+  const ask = () => {
+    if (results.length >= words.length) return endQuiz(results);
+    const w = words[results.length]; hud();
+    UI.spell(w, `Pop quiz: word ${results.length + 1} of ${words.length}`, {
+      onFirst: right => {
+        results.push({ word: w, right }); markWord(level.id, w.w, right, { quiz: true }); streak = right ? streak + 1 : 0; hud();
+        if (right) { player.anim.waveT = 1.1; sparkleAt(player); }
+      },
+      onEarn: () => {}, onClose: () => setTimeout(ask, 300),
+    }, { mode: 'word', quiz: true });
+  };
+  ask();
+}
+function endQuiz(results) {
+  markQuizDone(level.id); UI.quizHudHide();
+  hall.confetti.visible = true; hall.resetConfetti(); player.anim.waveT = 2.5;
+  UI.quizResults(level, results, () => {
+    hall.confetti.visible = false; stage(false);
+    for (const a of rivals) { a.d.root.visible = true; a.d.blob.visible = true; }
+    player.root.position.set(room.spawn.x, 0, room.spawn.z); player.root.rotation.y = room.spawn.heading; player.blob.visible = true; player.anim.wave = 0; player.anim.waveT = 0;
+    C.camInit = false; phase = 'start';
+    UI.start(level, THEME, startRound);
+  });
+}
+/* entering a wing: the first time, a pop quiz finds the words she already knows */
+function enterLevel() {
+  const p = loadProgress(); p.last = LEVEL + 1; saveProgress(p);
+  if (!levelStats(level).quiz && !QS.has('skipstart') && !QS.has('noquiz')) startQuiz();
+  else { UI.start(level, THEME, startRound); if (QS.has('skipstart')) document.getElementById('startGo').click(); }
+}
+if (QS.has('go') || QS.has('skipstart') || QS.has('quiz')) { if (QS.has('quiz')) startQuiz(); else enterLevel(); }
+else UI.home(LEVELS.slice(0, PLAYABLE), LEVELS.slice(0, PLAYABLE).map(levelStats), UNLOCKED, i => { if (i === LEVEL) enterLevel(); else goLevel(i + 1); });
 
 /* ---------------- loop ---------------- */
 const _dir = new THREE.Vector3(), _goal = new THREE.Vector3();
@@ -294,6 +356,8 @@ function boutique(dt) {
   else for (const a of rivals) a.d.anim.speed *= Math.exp(-dt * 8);
   separate();
   for (const d of dolls) { d.blob.position.x = d.root.position.x; d.blob.position.z = d.root.position.z; }
+  // while a close-up panel is open, the other models step out of the shot so they never block her
+  for (const a of rivals) a.d.root.visible = a.d.blob.visible = !C.focus;
   // timer: when it runs out, wait for any open card, then the runway phrase
   if (phase === 'dress') {
     remain -= dt;
@@ -318,9 +382,15 @@ function boutique(dt) {
     UI.pin(plates[i], s);
   });
 }
-function frame(now) {
+function step(now) {
   const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = Math.max(last, now); t += dt;
-  if (show) {
+  if (phase === 'quiz') {
+    const A = player.anim;
+    if (A.waveT > 0) { A.waveT -= dt; A.wave = Math.min(1, A.wave + dt * 5); } else A.wave = Math.max(0, A.wave - dt * 4);
+    if (hall.confetti.visible) hall.tickConfetti(dt, t);
+    camera.position.set(RW.x + 0.2, 1.75, RW.z + RW.end + 4.4); camera.lookAt(RW.x + 0.2, RW.top + 1.02, RW.z + RW.end - 0.4);
+    scene.updateMatrixWorld(); UI.bubble(null);
+  } else if (show) {
     show.update(dt, t);
     scene.updateMatrixWorld();
     if (phase === 'podium' || phase === 'results') dolls.forEach((d, i) => UI.pin(plates[i], d.root.visible ? toScreen(d.bones.headC.localToWorld(_v.set(0, 0.36, 0))) : { ok: false }));
@@ -329,7 +399,9 @@ function frame(now) {
   for (const d of dolls) if (d.root.visible) animateDoll(d, t, dt);
   renderer.render(scene, camera);
   if (++frames === 2) UI.loaded();
-  requestAnimationFrame(frame);
 }
+function frame(now) { step(now); requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
-window.__game = { scene, camera, player, rivals, room, session, C, UI, earned, get phase() { return phase; }, get show() { return show; }, THEME };
+window.__game = { scene, camera, player, rivals, room, session, C, UI, earned, level, LEVEL,
+  advance(sec) { for (let i = 0; i < sec * 20; i++) step(last + 50); },      // for tests: run the game forward by hand
+  get phase() { return phase; }, get show() { return show; }, THEME };

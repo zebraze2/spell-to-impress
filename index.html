@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/game.css?v=2271898f">
+<link rel="stylesheet" href="css/game.css?v=2e31e9be">
 </head>
 <body>
 <canvas id="gl"></canvas>
@@ -41,6 +41,15 @@
     <button class="btn wide" id="panelDone" type="button">Done</button>
   </div>
 
+  <!-- home: pick a wing -->
+  <div class="modal" id="homeCard" hidden>
+    <div class="card big">
+      <h1>Spell to Impress</h1>
+      <p class="teach">Pick a wing to play.</p>
+      <div class="levels" id="homeLevels"></div>
+    </div>
+  </div>
+
   <!-- start: pattern card -->
   <div class="modal" id="startCard" hidden>
     <div class="card big">
@@ -49,7 +58,7 @@
       <p class="teach" id="startTeach"></p>
       <div class="points" id="startPoints"></div>
       <div class="theme">Theme: <b id="startTheme">Garden Party</b> · <span id="startMinutes">6</span> minutes</div>
-      <p class="rule">Spell a word to get each piece of clothing, and to use the hair salon or the makeup vanity. Spell <b>8 out of 10</b> right on the first try to unlock the next wing.</p>
+      <p class="rule">Spell a word to get each piece of clothing, and to change its color or pattern. Sort words to open the hair salon and the makeup vanity. Spell <b>8 out of 10</b> right on the first try to unlock the next wing.</p>
       <div class="row"><button class="btn ghost" id="startListen" type="button">Hear it</button><button class="btn" id="startGo" type="button">Start!</button></div>
     </div>
   </div>
@@ -71,6 +80,6 @@
   "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
 }}
 </script>
-<script type="module" src="js/main.js?v=2271898f"></script>
+<script type="module" src="js/main.js?v=2e31e9be"></script>
 </body>
 </html>

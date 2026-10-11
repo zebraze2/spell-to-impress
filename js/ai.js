@@ -1,12 +1,12 @@
 /* Computer models: they plan an outfit for the theme, walk to shelves, browse, put things on,
    and drop by the salon chair and the vanity. */
 import * as THREE from 'three';
-import { rng, shade } from './util.js?v=2271898f';
-import { buildDoll } from './doll.js?v=2271898f';
-import { LOOKS } from './face.js?v=2271898f';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=2271898f';
-import { CATALOG, makeItem } from './catalog.js?v=2271898f';
-import { stepDoll, steerDir } from './player.js?v=2271898f';
+import { rng, shade } from './util.js?v=2e31e9be';
+import { buildDoll } from './doll.js?v=2e31e9be';
+import { LOOKS } from './face.js?v=2e31e9be';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=2e31e9be';
+import { CATALOG, makeItem } from './catalog.js?v=2e31e9be';
+import { stepDoll, steerDir } from './player.js?v=2e31e9be';
 
 export function person(skin, o = {}) {
   return {
@@ -25,11 +25,12 @@ export const STARTER = [['tee', '#f4f0ee'], ['shorts', '#d9d3cf'], ['sneakers', 
 export function dressStarter(d) { for (const [id, c] of STARTER) { const it = makeItem(CATALOG.find(x => x.id === id), c, 'solid'); it.starter = true; d.wear(it); } }
 
 /* choose an outfit that suits the theme (with some personality/randomness) */
-function planOutfit(theme, r, style = []) {
+function planOutfit(theme, r, style = [], stock = CATALOG) {
   // theme fit + her personal style + a dash of randomness; then a random pick among her top three
   const score = def => def.tags.filter(t => theme.tags.includes(t)).length * 1.2 + def.tags.filter(t => style.includes(t)).length * 1.5 + r() * 2.5;
   const best = slot => {
-    const ranked = CATALOG.filter(d => d.slot === slot).map(d => [d, score(d)]).sort((a, b) => b[1] - a[1]);
+    const ranked = stock.filter(d => d.slot === slot).map(d => [d, score(d)]).sort((a, b) => b[1] - a[1]);
+    if (!ranked.length) return null;
     const k = r(); return ranked[Math.min(ranked.length - 1, k < 0.55 ? 0 : k < 0.85 ? 1 : 2)][0];
   };
   const plan = [];
@@ -38,7 +39,7 @@ function planOutfit(theme, r, style = []) {
   if (r() < 0.85) plan.push(best('head'));
   if (r() < 0.6) plan.push(best('neck'));
   if (r() < 0.25) plan.push(best('hands'));
-  const steps = plan.map(def => ({ kind: 'item', def }));
+  const steps = plan.filter(Boolean).map(def => ({ kind: 'item', def }));
   if (r() < 0.7) steps.splice(Math.floor(r() * steps.length), 0, { kind: 'hair' });
   if (r() < 0.6) steps.splice(Math.floor(r() * steps.length), 0, { kind: 'makeup' });
   return steps;
@@ -55,7 +56,7 @@ export function makeRivals(scene, room, theme, count = 4) {
     d.root.position.set(w.x, 0, w.z); d.root.rotation.y = Math.random() * 6.28;
     scene.add(d.root);
     const r = rng(1000 + i * 77 + Math.floor(Math.random() * 1000));
-    rivals.push({ R, d, r, steps: planOutfit(theme, r, R.style), state: 'idle', timer: 0.5 + i * 0.9, target: null, speed: 0.85 + r() * 0.25, stuck: 0, theme });
+    rivals.push({ R, d, r, steps: planOutfit(theme, r, R.style, room.interact.filter(it => it.kind === 'item').map(it => it.def)), state: 'idle', timer: 0.5 + i * 0.9, target: null, speed: 0.85 + r() * 0.25, stuck: 0, theme });
   });
   return rivals;
 }
