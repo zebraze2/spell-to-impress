@@ -1,11 +1,11 @@
 /* Builders for shoes, headwear, necklaces and gloves. */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, smoothSeams, cached, limbLathe, crSample } from './util.js?v=c74e265f';
-import { CHEST_KEYS, ARM_KEYS, FARM_KEYS, ringAt, headShape, mittenGeo } from './doll.js?v=c74e265f';
-import { fabric } from './clothes.js?v=c74e265f';
-import { TEX } from './textures.js?v=c74e265f';
-import { makeBow, shinTubeGeo } from './garment-shapes.js?v=c74e265f';
+import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, smoothSeams, cached, limbLathe, crSample } from './util.js?v=cc5f8249';
+import { CHEST_KEYS, ARM_KEYS, FARM_KEYS, ringAt, headShape, mittenGeo } from './doll.js?v=cc5f8249';
+import { fabric } from './clothes.js?v=cc5f8249';
+import { TEX } from './textures.js?v=cc5f8249';
+import { makeBow, shinTubeGeo } from './garment-shapes.js?v=cc5f8249';
 
 const mesh = (geo, mat) => new THREE.Mesh(geo, mat);
 export const pearlMat = new THREE.MeshStandardMaterial({ color: '#fff4ec', roughness: 0.16, emissive: '#3a2a30', emissiveIntensity: 0.25 });

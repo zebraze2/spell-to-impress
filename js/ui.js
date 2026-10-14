@@ -1,5 +1,5 @@
 /* HTML overlay: banner, nameplates, the "Spell it!" bubble, spelling card, colour / hair / makeup panels. */
-import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=c74e265f';
+import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=cc5f8249';
 
 const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';

@@ -4,18 +4,18 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=c74e265f';
-import { buildDoll, animateDoll } from './doll.js?v=c74e265f';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=c74e265f';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=c74e265f';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=c74e265f';
-import { PRINTS, TEX } from './textures.js?v=c74e265f';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=c74e265f';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=c74e265f';
-import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=c74e265f';
-import { LEVELS } from './words.js?v=c74e265f';
-import { buildRunway, makeShow, RW } from './runway.js?v=c74e265f';
-import { UI } from './ui.js?v=c74e265f';
+import { buildRoom } from './room.js?v=cc5f8249';
+import { buildDoll, animateDoll } from './doll.js?v=cc5f8249';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=cc5f8249';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=cc5f8249';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=cc5f8249';
+import { PRINTS, TEX } from './textures.js?v=cc5f8249';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=cc5f8249';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=cc5f8249';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=cc5f8249';
+import { LEVELS } from './words.js?v=cc5f8249';
+import { buildRunway, makeShow, RW } from './runway.js?v=cc5f8249';
+import { UI } from './ui.js?v=cc5f8249';
 
 const QS = new URLSearchParams(location.search);
 if (QS.has('reset')) { resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }   // ?reset starts over (for play-testing)
@@ -160,9 +160,10 @@ function putOn(def) {
   UI.colors(item, PALETTE, PRINTS, closePanel, (kind, done) => spellFor((kind === 'colors' ? 'colors' : 'patterns') + ' of the ' + def.name.toLowerCase(),
     () => { if (kind === 'colors') item.colorsOpen = true; else item.printsOpen = true; }, done));
 }
-/* each piece of clothing costs one word: a whole dictated word, or (early on) just the new sound */
-function spellFor(forName, onEarn, onClose) {
-  const { word, retry, fill } = session.next();
+/* each piece of clothing costs one word: a whole dictated word, or (early on) just the new sound.
+   whole: always the whole word, never the fill-in scaffold */
+function spellFor(forName, onEarn, onClose, { whole = false } = {}) {
+  const next = session.next(), { word, retry } = next, fill = next.fill && !whole;
   UI.spell(word, 'for the ' + forName, {
     onFirst: right => { session.record(word, right, { retry, fill }); score(); },
     onEarn, onClose,
@@ -178,7 +179,7 @@ function useItem(it) {
   }
   spellFor(def.name.toLowerCase(), () => { earned.add(def.id); putOn(def); });
 }
-/* the salon chair and the vanity open with one spelled word per visit, just like clothes; inside, everything is free.
+/* the salon chair and the vanity open with one whole spelled word per visit; inside, everything is free.
    While she's there the computer models wait their turn. */
 function useStation(it) {
   it.busy = 'player';
@@ -193,7 +194,7 @@ function useStation(it) {
       UI.makeup(LOOKS, LIP_COLORS, { look: player.look, lip: player.lip }, cur => player.setLook(cur.look, cur.lip), done);
     }
   };
-  spellFor(it.kind === 'hair' ? 'hair salon' : 'makeup vanity', open, earned => { if (!earned) it.busy = null; });
+  spellFor(it.kind === 'hair' ? 'hair salon' : 'makeup vanity', open, earned => { if (!earned) it.busy = null; }, { whole: true });
 }
 function use(it) {
   if (!it || UI.busy || phase !== 'dress') return;
