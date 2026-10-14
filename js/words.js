@@ -1,11 +1,10 @@
-/* Spelling curriculum: each level introduces TWO new ideas, practised four ways
-   (spell it, fill the sound, word sort, phrase dictation). A review level follows every three levels.
+/* Spelling curriculum: each level introduces TWO new ideas, practised different ways
+   (spell it, fill the sound, a runway word that uses both). A review level follows every three levels.
    Research behind the design:
    - Explicit, systematic phonics / spelling instruction beats incidental learning (NRP 2000; Graham & Santangelo 2014 meta-analysis).
    - Few new ideas at a time, practised to mastery before moving on (mastery learning; cognitive load).
    - Dictation + recall (hear it, spell it from memory) builds the orthographic memory that reading uses (Ehri: orthographic mapping).
    - Scaffolds that fade: fill in just the new sound first, then spell whole words (gradual release).
-   - Word sorts make the pattern visible and connect spelling to reading (Bear et al., Words Their Way).
    - Immediate correction, then writing the word correctly from memory (Horn's "corrected test").
    - Missed words return later in the same round: spaced retrieval (Cepeda et al. 2006; Roediger & Karpicke 2006).
    - The two ideas are interleaved so she must choose which one a word needs (Rohrer 2012).

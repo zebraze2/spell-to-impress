@@ -1,5 +1,5 @@
 /* HTML overlay: banner, nameplates, the "Spell it!" bubble, spelling card, colour / hair / makeup panels. */
-import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=93c772a3';
+import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=c74e265f';
 
 const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -10,7 +10,7 @@ export const heartSVG = c => `<svg viewBox="0 0 32 30"><path d="M16 28C5 20 1 14
 
 export const UI = {
   /* something is open on top of the game (read from the page, so nested cards can't get out of step) */
-  get busy() { return ['spellCard', 'panel', 'startCard', 'endCard', 'sortCard', 'homeCard', 'quizCard'].some(id => { const e = $(id); return e && !e.hidden; }); },
+  get busy() { return ['spellCard', 'panel', 'startCard', 'endCard', 'homeCard', 'quizCard'].some(id => { const e = $(id); return e && !e.hidden; }); },
   toast(msg, ms = 2400) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), ms); },
   setTimer(sec) { const c = $('clock'); c.textContent = String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); $('timer').classList.toggle('low', sec <= 30); },
   setScore(right, tries) { $('score').innerHTML = `Spelled <b>${right}</b> of <b>${tries}</b> on the first try`; },
@@ -140,70 +140,6 @@ UI.spell = (word, forName, cb, { mode = 'word', phrase = '', words = [], quiz = 
   $('spellCancel').onclick = quiz ? skip : () => close(false);
   $('spellCancel').textContent = quiz ? 'Skip this one' : 'Not now';
   $('spellCancel').hidden = !!cb.noCancel;
-};
-
-/* ---------------- word sort (opens the salon / vanity) ----------------
-   Read the words and put each one in its pattern's box. Tap a word to hear it. */
-UI.sort = (title, ideas, words, onDone) => {
-  let m = $('sortCard');
-  if (!m) {
-    m = document.createElement('div'); m.className = 'modal'; m.id = 'sortCard';
-    m.innerHTML = `<div class="card sortcard"><div class="for" id="sortFor"></div><div class="prompt">Read each word and drag it to its box.</div>
-      <div class="words" id="sortWords"></div><div class="bins" id="sortBins"></div><div class="hint" id="sortHint"></div>
-      <div class="row"><button class="btn ghost" id="sortCancel" type="button">Not now</button></div></div>`;
-    $('ui').appendChild(m);
-  }
-  m.hidden = false; $('sortFor').textContent = title; $('sortHint').textContent = ''; $('sortCancel').style.visibility = '';
-  const W = $('sortWords'), B = $('sortBins');
-  W.innerHTML = ''; B.innerHTML = '';
-  let picked = null, left = words.length;
-  const bins = ideas.map(idea => {
-    const b = document.createElement('div'); b.className = 'bin'; b.dataset.idea = idea.id;
-    b.innerHTML = `<div class="blabel">${idea.label}</div><div class="bslot"></div>`;
-    B.appendChild(b); return b;
-  });
-  const place = (card, bin) => {
-    const w = card._w;
-    if (bin.dataset.idea === w.idea) {
-      card.classList.remove('picked'); card.classList.add('placed'); card.innerHTML = revealHTML(w);
-      bin.querySelector('.bslot').appendChild(card); card.onpointerdown = null; picked = null; left--;
-      $('sortHint').textContent = '';
-      if (left === 0) { $('sortHint').textContent = 'Sorted! Nice reading.'; $('sortCancel').style.visibility = 'hidden'; setTimeout(() => { m.hidden = true; onDone(true); }, 1100); }
-    } else {
-      card.classList.remove('picked'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
-      $('sortHint').textContent = `Look closely: which letters make the sound in "${w.w}"?`;
-      picked = null;
-    }
-  };
-  for (const w of words) {
-    const c = document.createElement('button'); c.type = 'button'; c.className = 'wcard'; c.textContent = w.w; c._w = w;
-    // drag (mouse or finger) or tap-then-tap
-    c.onpointerdown = e => {
-      e.preventDefault(); sayWord(w);
-      const r = c.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
-      let moved = false;
-      const move = ev => {
-        if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 6) return;
-        moved = true; c.classList.add('dragging');
-        Object.assign(c.style, { position: 'fixed', left: ev.clientX - ox + 'px', top: ev.clientY - oy + 'px', width: r.width + 'px', zIndex: 20 });
-      };
-      const up = ev => {
-        removeEventListener('pointermove', move); removeEventListener('pointerup', up);
-        c.classList.remove('dragging'); Object.assign(c.style, { position: '', left: '', top: '', width: '', zIndex: '' });
-        if (moved) {
-          const bin = bins.find(b => { const br = b.getBoundingClientRect(); return ev.clientX >= br.left && ev.clientX <= br.right && ev.clientY >= br.top && ev.clientY <= br.bottom; });
-          if (bin) place(c, bin);
-        } else {
-          W.querySelectorAll('.picked').forEach(x => x.classList.remove('picked'));
-          picked = c; c.classList.add('picked'); $('sortHint').textContent = 'Now tap the box it goes in.';
-        }
-      };
-      addEventListener('pointermove', move); addEventListener('pointerup', up);
-    };
-    W.appendChild(c);
-  }
-  for (const b of bins) b.onclick = () => { if (picked) place(picked, b); };
-  $('sortCancel').onclick = () => { stopAudio(); m.hidden = true; onDone(false); };
 };
 
 /* ---------------- side panel (colours, hair, makeup) ---------------- */

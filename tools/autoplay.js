@@ -1,5 +1,5 @@
 /* Dev tool: plays one level by itself to check the whole flow — pop quiz, spelling for clothes (one miss on
-   purpose), a colour unlock, the word sort at the salon, the runway word, the show and the unlock.
+   purpose), a colour unlock, a word for the hair salon, the runway word, the show and the unlock.
    Open e.g. http://localhost:5177/?reset&unlock&level=3&go=1&seconds=40 and run in the console:
      import('/tools/autoplay.js').then(m => m.run())
    The log of what happened builds up in window.__autolog (window.__autodone is set at the end).
@@ -64,20 +64,13 @@ export async function run({ quizWrong = 4, words = 9 } = {}) {
     }
     log.push(`wearing: ${[...G.player.worn.values()].map(w => w.def.id).join(', ')}`);
 
-    // 3. word sort at the hair salon
-    const st = G.room.interact.find(it => it.kind === 'hair');
-    G.use(st);
-    await until(() => visible('sortCard'), 5000, 'the word sort');
-    const cards = [...document.querySelectorAll('#sortWords .wcard')];
-    log.push('sort: ' + [...document.querySelectorAll('#sortBins .blabel')].map(b => b.textContent).join(' | ') + ' <- ' + cards.map(c => c.textContent).join(', '));
-    for (const c of cards) {
-      c.onpointerdown({ preventDefault() {}, clientX: 0, clientY: 0 });
-      window.dispatchEvent(new PointerEvent('pointerup', { clientX: 0, clientY: 0 }));
-      document.querySelector(`#sortBins .bin[data-idea="${c._w.idea}"]`).click();
-      await sleep(120);
-    }
+    // 3. a spelled word opens the hair salon
+    G.use(G.room.interact.find(it => it.kind === 'hair'));
+    await until(() => visible('spellCard') && last, 5000, 'the salon word');
+    log.push('salon: ' + text('spellFor'));
+    await answer(true);
     await until(() => visible('panel'), 5000, 'the salon');
-    log.push('salon opened');
+    log.push('salon opened: ' + text('panelTitle'));
     $('panelDone').click(); await sleep(150);
 
     // 4. time's up -> runway word -> show

@@ -6,7 +6,7 @@
    - In a round: missed words first, then unseen ones; a known word is mixed in now and then (spaced review).
      The first words of each idea are "fill the sound"; a missed word comes back a few words later.
    - First tries count toward the 80% that unlocks the next wing. */
-import { LEVELS, phraseId } from './words.js?v=93c772a3';
+import { LEVELS, phraseId } from './words.js?v=c74e265f';
 
 export const PASS = 0.8;
 export const MIN_TRIES = 8;          // need at least this many scored tries in a round to unlock the next wing
@@ -105,13 +105,6 @@ export function makeSession(levelIndex = 0) {
   };
   S.recordPhrase = right => { S.firstTries++; if (right) S.firstRight++; };
   S.score = () => S.firstTries ? S.firstRight / S.firstTries : 0;
-  /* a word sort: two words for each idea (words that use both ideas are left out) */
-  S.sortIdeas = () => L.ideas.length > 2 ? shuffle(L.ideas).slice(0, 2) : L.ideas;
-  S.sortSet = ideas => {
-    const out = [];
-    for (const idea of ideas) out.push(...shuffle(L.words.filter(w => w.idea === idea.id)).slice(0, 2));
-    return shuffle(out);
-  };
   S.phrase = () => L.phrases[Math.floor(Math.random() * L.phrases.length)];
   /* the runway word: one that uses both of the level's ideas (check, shock, thick) */
   S.capstone = () => { const both = L.words.filter(w => w.idea === 'both'); return both.length ? both[Math.floor(Math.random() * both.length)] : S.next().word; };

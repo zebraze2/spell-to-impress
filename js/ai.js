@@ -1,12 +1,12 @@
 /* Computer models: they plan an outfit for the theme, walk to shelves, browse, put things on,
    and drop by the salon chair and the vanity. */
 import * as THREE from 'three';
-import { rng, shade } from './util.js?v=93c772a3';
-import { buildDoll } from './doll.js?v=93c772a3';
-import { LOOKS } from './face.js?v=93c772a3';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=93c772a3';
-import { CATALOG, makeItem } from './catalog.js?v=93c772a3';
-import { stepDoll, steerDir } from './player.js?v=93c772a3';
+import { rng, shade } from './util.js?v=c74e265f';
+import { buildDoll } from './doll.js?v=c74e265f';
+import { LOOKS } from './face.js?v=c74e265f';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=c74e265f';
+import { CATALOG, makeItem } from './catalog.js?v=c74e265f';
+import { stepDoll, steerDir } from './player.js?v=c74e265f';
 
 export function person(skin, o = {}) {
   return {

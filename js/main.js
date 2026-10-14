@@ -1,21 +1,21 @@
 /* Spell to Impress — Level 1.
    Dress phase (6 min): walk the boutique; spell to earn clothes (the first words of each idea are
-   "fill the sound"); sort words to open the salon / vanity. Time's up: spell a phrase to walk the runway.
+   "fill the sound"); one word opens the salon / vanity for a visit. Time's up: one more word to walk the runway.
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=93c772a3';
-import { buildDoll, animateDoll } from './doll.js?v=93c772a3';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=93c772a3';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=93c772a3';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=93c772a3';
-import { PRINTS, TEX } from './textures.js?v=93c772a3';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=93c772a3';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=93c772a3';
-import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=93c772a3';
-import { LEVELS } from './words.js?v=93c772a3';
-import { buildRunway, makeShow, RW } from './runway.js?v=93c772a3';
-import { UI } from './ui.js?v=93c772a3';
+import { buildRoom } from './room.js?v=c74e265f';
+import { buildDoll, animateDoll } from './doll.js?v=c74e265f';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=c74e265f';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=c74e265f';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=c74e265f';
+import { PRINTS, TEX } from './textures.js?v=c74e265f';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=c74e265f';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=c74e265f';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=c74e265f';
+import { LEVELS } from './words.js?v=c74e265f';
+import { buildRunway, makeShow, RW } from './runway.js?v=c74e265f';
+import { UI } from './ui.js?v=c74e265f';
 
 const QS = new URLSearchParams(location.search);
 if (QS.has('reset')) { resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }   // ?reset starts over (for play-testing)
@@ -178,7 +178,7 @@ function useItem(it) {
   }
   spellFor(def.name.toLowerCase(), () => { earned.add(def.id); putOn(def); });
 }
-/* the salon chair and the vanity open with a word sort; inside, everything is free.
+/* the salon chair and the vanity open with one spelled word per visit, just like clothes; inside, everything is free.
    While she's there the computer models wait their turn. */
 function useStation(it) {
   it.busy = 'player';
@@ -193,8 +193,7 @@ function useStation(it) {
       UI.makeup(LOOKS, LIP_COLORS, { look: player.look, lip: player.lip }, cur => player.setLook(cur.look, cur.lip), done);
     }
   };
-  const ideas = session.sortIdeas();
-  UI.sort('Sort the words to open the ' + (it.kind === 'hair' ? 'hair salon' : 'makeup vanity'), ideas, session.sortSet(ideas), ok => { if (ok) open(); else it.busy = null; });
+  spellFor(it.kind === 'hair' ? 'hair salon' : 'makeup vanity', open, earned => { if (!earned) it.busy = null; });
 }
 function use(it) {
   if (!it || UI.busy || phase !== 'dress') return;
