@@ -6,7 +6,7 @@
    - In a round: missed words first, then unseen ones; a known word is mixed in now and then (spaced review).
      The first words of each idea are "fill the sound"; a missed word comes back a few words later.
    - First tries count toward the 80% that unlocks the next wing. */
-import { LEVELS, phraseId } from './words.js?v=51cc4124';
+import { LEVELS, phraseId } from './words.js?v=93c772a3';
 
 export const PASS = 0.8;
 export const MIN_TRIES = 8;          // need at least this many scored tries in a round to unlock the next wing
@@ -29,26 +29,37 @@ export function markWord(levelId, w, right, { quiz = false } = {}) {
   saveProgress(p);
 }
 export function markQuizDone(levelId) { const p = loadProgress(); levelRec(p, levelId).quiz = true; saveProgress(p); }
+/* word -> mastery mark for a level; a review level falls back to the marks from the levels it reviews */
+export function marks(level) {
+  const p = loadProgress(), own = levelRec(p, level.id).words;
+  if (!level.review) return own;
+  const merged = {};
+  for (const n of level.review) Object.assign(merged, levelRec(p, LEVELS[n - 1].id).words);
+  return Object.assign(merged, own);
+}
 export function levelStats(level) {
-  const rec = mastery(level.id), n = level.words.length;
+  const m = marks(level), n = level.words.length;
   let known = 0, practice = 0;
-  for (const w of level.words) { const m = rec.words[w.w] ?? 0; if (m >= 2) known++; else if (m === -1) practice++; }
-  return { n, known, practice, quiz: rec.quiz };
+  for (const w of level.words) { const v = m[w.w] ?? 0; if (v >= 2) known++; else if (v === -1) practice++; }
+  return { n, known, practice, quiz: mastery(level.id).quiz };
 }
 export function unlockedLevel() { return loadProgress().unlocked || 1; }
 export function unlock(n) { const p = loadProgress(); p.unlocked = Math.max(p.unlocked || 1, n); saveProgress(p); }
 
 /* the pop quiz: a spread of words across both ideas, with every spelling inside an idea represented */
 export function quizSet(level, size = QUIZ_SIZE) {
-  const per = Math.floor((size - 1) / level.ideas.length), out = [];
+  const both = shuffle(level.words.filter(w => w.idea === 'both'));
+  const nBoth = level.review ? 0 : Math.min(both.length, 2);
+  const per = Math.floor((size - nBoth) / level.ideas.length), out = [];
   for (const idea of level.ideas) {
     const groups = {};
     for (const w of level.words.filter(w => w.idea === idea.id)) (groups[w.chunk] = groups[w.chunk] || []).push(w);
     const lists = Object.values(groups).map(g => shuffle(g));
     for (let k = 0, taken = 0; taken < per && lists.some(l => l.length); k++) { const l = lists[k % lists.length]; if (l.length) { out.push(l.shift()); taken++; } }
   }
-  const both = shuffle(level.words.filter(w => w.idea === 'both'));
-  return shuffle(out).concat(both.slice(0, Math.max(0, size - out.length)));      // the two-idea words come last
+  const spare = shuffle(level.words.filter(w => w.idea !== 'both' && !out.includes(w)));
+  while (out.length < size - nBoth && spare.length) out.push(spare.shift());
+  return shuffle(out).concat(both.slice(0, size - out.length));      // the two-idea words come last
 }
 
 /* ---------------- one round ---------------- */
@@ -61,7 +72,7 @@ export function makeSession(levelIndex = 0) {
   const band = (m, w) => { const v = m[w.w] ?? 0; return v === -1 ? 0 : v === 0 ? 1 : v === 1 ? 2 : 3; };   // 0 = most urgent
   /* choose the next word: missed first, then unseen, then once-right; every 5th pick is a known word for review */
   function pick() {
-    const m = mastery(L.id).words;
+    const m = marks(L);
     let pool = L.words.filter(w => w.idea !== 'both' && !S.served.has(w.w));
     if (!pool.length) { S.served.clear(); pool = L.words.filter(w => w.idea !== 'both'); }
     S.picks++;
@@ -78,8 +89,8 @@ export function makeSession(levelIndex = 0) {
   S.next = () => {
     const due = S.queue.findIndex(q => q.dueIn <= 0);
     if (due >= 0) return { word: S.queue.splice(due, 1)[0].word, retry: true, fill: false };
-    const word = pick(), m = mastery(L.id).words[word.w] ?? 0;
-    const fill = m <= 0 && word.idea in S.fills && S.fills[word.idea] < FILL_PER_IDEA && typeof word.chunk === 'string';
+    const word = pick(), m = marks(L)[word.w] ?? 0;
+    const fill = !L.review && m <= 0 && word.idea in S.fills && S.fills[word.idea] < FILL_PER_IDEA && typeof word.chunk === 'string' && word.chunk.length < word.w.length;
     return { word, retry: false, fill };
   };
   /* record the first try at a served word */
@@ -95,9 +106,10 @@ export function makeSession(levelIndex = 0) {
   S.recordPhrase = right => { S.firstTries++; if (right) S.firstRight++; };
   S.score = () => S.firstTries ? S.firstRight / S.firstTries : 0;
   /* a word sort: two words for each idea (words that use both ideas are left out) */
-  S.sortSet = () => {
+  S.sortIdeas = () => L.ideas.length > 2 ? shuffle(L.ideas).slice(0, 2) : L.ideas;
+  S.sortSet = ideas => {
     const out = [];
-    for (const idea of L.ideas) out.push(...shuffle(L.words.filter(w => w.idea === idea.id)).slice(0, 2));
+    for (const idea of ideas) out.push(...shuffle(L.words.filter(w => w.idea === idea.id)).slice(0, 2));
     return shuffle(out);
   };
   S.phrase = () => L.phrases[Math.floor(Math.random() * L.phrases.length)];

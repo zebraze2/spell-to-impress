@@ -2,8 +2,8 @@
    Rigid parts swing at the joints, like Roblox avatars, so a procedural walk works with any outfit.
    The same body (black, no face) is the shop mannequin. */
 import * as THREE from 'three';
-import { TAU, lerp, clamp, smooth, V3, smoothSeams, cached, crSample, bodyLathe, limbLathe, gridGeo } from './util.js?v=51cc4124';
-import { FACE, faceTextures, faceParams, LOOKS } from './face.js?v=51cc4124';
+import { TAU, lerp, clamp, smooth, V3, smoothSeams, cached, crSample, bodyLathe, limbLathe, gridGeo } from './util.js?v=93c772a3';
+import { FACE, faceTextures, faceParams, LOOKS } from './face.js?v=93c772a3';
 
 /* ---------------- body geometry (shared by every doll) ---------------- */
 export function headShape(x, y, z, out, inflate = 0) {
@@ -151,16 +151,21 @@ export function buildDoll(person, opts = {}) {
   /* ---- hair ---- */
   d.hair = null;
   d.setHair = (style, color) => {
-    if (d.hair) { B.headC.remove(d.hair); disposeTree(d.hair); }
+    if (d.hair) { fitHair(d, null); B.headC.remove(d.hair); disposeTree(d.hair); }
     d.locks = []; d.hairPanel = [];
     d.hairStyle = style; d.hairColor = color;
     d.hair = style.build(d, color);
     B.headC.add(d.hair);
+    fitHair(d);
   };
 
   /* ---- clothes ---- */
-  d.equip = item => { for (const p of item.parts) B[p.bone].add(p.obj); d.worn.set(item.slot, item); item.wornBy = d; };
-  d.unequip = item => { for (const p of item.parts) if (p.obj.parent) p.obj.parent.remove(p.obj); if (d.worn.get(item.slot) === item) d.worn.delete(item.slot); item.wornBy = null; };
+  d.equip = item => { for (const p of item.parts) B[p.bone].add(p.obj); d.worn.set(item.slot, item); item.wornBy = d; if (item.slot === 'head') fitHair(d); };
+  d.unequip = item => {
+    for (const p of item.parts) if (p.obj.parent) p.obj.parent.remove(p.obj);
+    if (d.worn.get(item.slot) === item) d.worn.delete(item.slot);
+    item.wornBy = null; if (item.slot === 'head') fitHair(d);
+  };
   /* put an item on, taking off whatever it replaces; returns the items removed */
   d.wear = item => {
     const removed = [];
@@ -171,6 +176,37 @@ export function buildDoll(person, opts = {}) {
 
   d.anim = makeAnimState();
   return d;
+}
+
+/* A hat squeezes the hair under it, so no lock pokes through: hair above the hat's rim is pulled inside an
+   egg shape that fits in the hat (fit = { obj: hat group, c: centre, r: radii, blend }, in the hat's own space).
+   Hair below the rim is left alone and flows out from under the hat. Each doll gets its own copy of the hair
+   shapes while it wears such a hat; taking the hat off puts the shared ones back. */
+const FIT_A = new THREE.Matrix4(), FIT_B = new THREE.Matrix4(), FIT_V = new THREE.Vector3();
+function fitHair(d, fit = d.worn.get('head')?.fit) {
+  if (!d.hair) return;
+  d.hair.traverse(o => {
+    if (!o.isMesh) return;
+    const u = o.userData;
+    if (!fit) { if (u.fitFrom) { o.geometry.dispose(); o.geometry = u.fitFrom; u.fitFrom = null; } return; }
+    if (!u.fitFrom) { u.fitFrom = o.geometry; o.geometry = o.geometry.clone(); }
+    FIT_A.identity();                                                  // this mesh -> head -> hat space
+    for (let p = o; p && p !== d.hair.parent; p = p.parent) { p.updateMatrix(); FIT_A.premultiply(p.matrix); }
+    fit.obj.updateMatrix(); FIT_A.premultiply(FIT_B.copy(fit.obj.matrix).invert());
+    FIT_B.copy(FIT_A).invert();
+    const [cx, cy, cz] = fit.c, [rx, ry, rz] = fit.r, lo = cy - (fit.blend ?? 0.04);
+    const src = u.fitFrom.attributes.position, dst = o.geometry.attributes.position, v = FIT_V;
+    for (let i = 0; i < src.count; i++) {
+      v.fromBufferAttribute(src, i).applyMatrix4(FIT_A);
+      if (v.y > lo) {
+        const dx = v.x - cx, dy = Math.max(0, v.y - cy), dz = v.z - cz;
+        const e = Math.hypot(dx / rx, dy / ry, dz / rz);
+        if (e > 1) { const w = smooth(lo, cy, v.y) * (1 - 1 / e); v.x -= dx * w; v.y -= dy * w; v.z -= dz * w; }
+      }
+      v.applyMatrix4(FIT_B); dst.setXYZ(i, v.x, v.y, v.z);
+    }
+    dst.needsUpdate = true; o.geometry.computeBoundingSphere();
+  });
 }
 
 export function disposeTree(o) {

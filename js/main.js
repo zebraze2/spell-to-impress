@@ -4,22 +4,22 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=51cc4124';
-import { buildDoll, animateDoll } from './doll.js?v=51cc4124';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=51cc4124';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=51cc4124';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=51cc4124';
-import { PRINTS, TEX } from './textures.js?v=51cc4124';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=51cc4124';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=51cc4124';
-import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=51cc4124';
-import { LEVELS } from './words.js?v=51cc4124';
-import { buildRunway, makeShow, RW } from './runway.js?v=51cc4124';
-import { UI } from './ui.js?v=51cc4124';
+import { buildRoom } from './room.js?v=93c772a3';
+import { buildDoll, animateDoll } from './doll.js?v=93c772a3';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=93c772a3';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=93c772a3';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=93c772a3';
+import { PRINTS, TEX } from './textures.js?v=93c772a3';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=93c772a3';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=93c772a3';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=93c772a3';
+import { LEVELS } from './words.js?v=93c772a3';
+import { buildRunway, makeShow, RW } from './runway.js?v=93c772a3';
+import { UI } from './ui.js?v=93c772a3';
 
 const QS = new URLSearchParams(location.search);
 if (QS.has('reset')) { resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }   // ?reset starts over (for play-testing)
-const PLAYABLE = 2;                                   // levels built so far
+const PLAYABLE = 7;                                   // levels built so far
 const UNLOCKED = QS.has('unlock') ? PLAYABLE : Math.min(PLAYABLE, unlockedLevel());
 const LEVEL = Math.max(1, Math.min(UNLOCKED, Number(QS.get('level')) || loadProgress().last || 1)) - 1;
 const THEME_SETS = [
@@ -34,6 +34,36 @@ const THEME_SETS = [
     { name: 'Royal Ball', tags: ['royal', 'formal', 'glam', 'elegant', 'party'], palette: ['#24306e', '#c9b3f2', '#ffffff', '#e9c48a', '#f7b6d0', '#9b6ad8', '#e0457b'] },
     { name: 'Disco Night', tags: ['disco', 'glam', 'party'], palette: ['#c9d2e8', '#9b6ad8', '#e0457b', '#e9c48a', '#3b2a66', '#1d181f', '#ffffff'] },
     { name: 'Movie Star', tags: ['glam', 'formal', 'elegant', 'royal'], palette: ['#c43b3b', '#e9c48a', '#1d181f', '#ffffff', '#f7b6d0', '#24306e'] },
+  ],
+  [ // Beach Wing
+    { name: 'Beach Day', tags: ['beach', 'summer', 'casual', 'sporty'], palette: ['#86c9e8', '#ffd27a', '#ff9a6a', '#ffffff', '#6fcfc4', '#f06aa0'] },
+    { name: 'Pool Party', tags: ['pool', 'summer', 'party', 'beach'], palette: ['#6fcfc4', '#86c9e8', '#ff8fb8', '#ffd27a', '#ffffff'] },
+    { name: 'Tropical Trip', tags: ['tropical', 'summer', 'beach', 'floral'], palette: ['#ff9a6a', '#f06aa0', '#6fcf97', '#ffd27a', '#86c9e8'] },
+    { name: 'Surf Day', tags: ['surf', 'sporty', 'beach', 'summer'], palette: ['#5b7fc0', '#86c9e8', '#ffd27a', '#ff9a6a', '#ffffff'] },
+  ],
+  [ // Gala Wing (review)
+    { name: 'Red Carpet', tags: ['glam', 'formal', 'gala', 'elegant'], palette: ['#c43b3b', '#e9c48a', '#1d181f', '#ffffff', '#7a1f3d'] },
+    { name: 'Fashion Gala', tags: ['gala', 'glam', 'elegant', 'party'], palette: ['#7a1f3d', '#e9c48a', '#c9d2e8', '#9b6ad8', '#1d181f'] },
+    { name: 'Award Show', tags: ['glam', 'formal', 'gala', 'royal'], palette: ['#e9c48a', '#c9d2e8', '#1d181f', '#c43b3b', '#ffffff'] },
+    { name: 'Royal Ball', tags: ['royal', 'formal', 'glam', 'elegant', 'party'], palette: ['#24306e', '#c9b3f2', '#ffffff', '#e9c48a', '#f7b6d0', '#9b6ad8'] },
+  ],
+  [ // Royal Wing
+    { name: 'Princess Party', tags: ['royal', 'fairytale', 'cute', 'party'], palette: ['#f6a9c4', '#c9b3f2', '#ffffff', '#e9c48a', '#a8e2cc'] },
+    { name: 'Fairy Tale', tags: ['fairytale', 'fairy', 'royal', 'garden', 'floral'], palette: ['#a8e2cc', '#c9b3f2', '#f6a9c4', '#ffffff', '#86c9e8'] },
+    { name: 'Queen for a Day', tags: ['royal', 'glam', 'elegant', 'formal'], palette: ['#e9c48a', '#7c6fd0', '#c43b3b', '#ffffff', '#24306e'] },
+    { name: 'Royal Ball', tags: ['royal', 'formal', 'glam', 'elegant', 'party'], palette: ['#24306e', '#c9b3f2', '#ffffff', '#e9c48a', '#f7b6d0', '#9b6ad8'] },
+  ],
+  [ // Winter Wing
+    { name: 'Snow Day', tags: ['winter', 'cozy', 'sporty', 'casual'], palette: ['#ffffff', '#86c9e8', '#e86a8a', '#c9b3f2', '#5b7fc0'] },
+    { name: 'Cozy Cabin', tags: ['cozy', 'winter', 'casual', 'school'], palette: ['#7a4a32', '#c43b3b', '#fff2d9', '#e9c48a', '#3b2a26'] },
+    { name: 'Holiday Party', tags: ['holiday', 'party', 'glam', 'winter'], palette: ['#c43b3b', '#6fcf97', '#e9c48a', '#ffffff', '#24306e'] },
+    { name: 'Ice Princess', tags: ['winter', 'icy', 'royal', 'formal', 'glam'], palette: ['#e3edfa', '#86c9e8', '#c9d2e8', '#ffffff', '#9b6ad8'] },
+  ],
+  [ // Sport Wing
+    { name: 'Sports Day', tags: ['sporty', 'team', 'casual', 'school'], palette: ['#c43b3b', '#5b7fc0', '#ffffff', '#ffd27a', '#24306e'] },
+    { name: 'Tennis Match', tags: ['tennis', 'sporty', 'school'], palette: ['#ffffff', '#6fcf97', '#ffd27a', '#86c9e8', '#f6a9c4'] },
+    { name: 'Dance Class', tags: ['dance', 'cute', 'party', 'sporty'], palette: ['#f6a9c4', '#c9b3f2', '#1d181f', '#ffffff', '#f06aa0'] },
+    { name: 'Field Trip', tags: ['school', 'casual', 'sporty'], palette: ['#7a8fd6', '#ffd27a', '#c43b3b', '#ffffff', '#6fcf97'] },
   ],
 ];
 const THEMES = THEME_SETS[LEVEL];
@@ -163,7 +193,8 @@ function useStation(it) {
       UI.makeup(LOOKS, LIP_COLORS, { look: player.look, lip: player.lip }, cur => player.setLook(cur.look, cur.lip), done);
     }
   };
-  UI.sort('Sort the words to open the ' + (it.kind === 'hair' ? 'hair salon' : 'makeup vanity'), level.ideas, session.sortSet(), ok => { if (ok) open(); else it.busy = null; });
+  const ideas = session.sortIdeas();
+  UI.sort('Sort the words to open the ' + (it.kind === 'hair' ? 'hair salon' : 'makeup vanity'), ideas, session.sortSet(ideas), ok => { if (ok) open(); else it.busy = null; });
 }
 function use(it) {
   if (!it || UI.busy || phase !== 'dress') return;
@@ -403,6 +434,6 @@ function step(now) {
 }
 function frame(now) { step(now); requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
-window.__game = { scene, camera, player, rivals, room, session, C, UI, earned, level, LEVEL,
+window.__game = { scene, camera, player, rivals, room, session, C, UI, earned, level, LEVEL, use,
   advance(sec) { for (let i = 0; i < sec * 20; i++) step(last + 50); },      // for tests: run the game forward by hand
   get phase() { return phase; }, get show() { return show; }, THEME };

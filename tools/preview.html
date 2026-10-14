@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spell to Impress · outfit preview</title>
+<style>
+  html, body { margin: 0; background: #f3e6ec; font: 14px system-ui, sans-serif; color: #5a3a50; }
+  canvas { display: block; }
+  #label { position: absolute; left: 12px; top: 8px; }
+</style>
+<!-- Dev tool: shows a model wearing ?items=a,b,c from three sides, plus each item's shop display.
+     e.g. tools/preview.html?items=coverup,bucket,sandals&hair=buns -->
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="label"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { buildDoll, animateDoll } from '../js/doll.js';
+import { CATALOG, makeItem, makeDisplay } from '../js/catalog.js';
+import { hairStyle, hairColor } from '../js/hair.js';
+import { person } from '../js/ai.js';
+
+const q = new URLSearchParams(location.search);
+const ids = (q.get('items') || '').split(',').filter(Boolean);
+const W = Math.min(1280, innerWidth), H = Math.min(760, innerHeight);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f3e6ec');
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.45;
+scene.add(new THREE.HemisphereLight('#fff3f4', '#c99a80', 0.9));
+const key = new THREE.DirectionalLight('#ffe7d2', 2.2); key.position.set(-3, 6, 5); scene.add(key);
+const rim = new THREE.DirectionalLight('#ff9fcd', 0.9); rim.position.set(3, 4, -6); scene.add(rim);
+
+const draw = (cam, x, y, w, h) => {
+  renderer.setViewport(x, H - y - h, w, h); renderer.setScissor(x, H - y - h, w, h);
+  cam.aspect = w / h; cam.updateProjectionMatrix(); renderer.render(scene, cam);
+};
+const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 80);
+const dress = (ids, x, hair) => {
+  const d = buildDoll(person('#efb592'), { faceRes: 256 });
+  d.setHair(hairStyle(hair || q.get('hair') || 'waves'), hairColor(q.get('color') || 'brown'));
+  for (const id of ids) { const def = CATALOG.find(c => c.id === id); if (def) d.wear(makeItem(def)); else console.warn('no item', id); }
+  d.anim.speed = 0; animateDoll(d, 0.5, 0.016);
+  d.root.position.x = x; scene.add(d.root); return d;
+};
+const outfits = q.get('outfits');
+if (outfits) {
+  // grid: one front view (and a small back view) per outfit, e.g. ?outfits=a.b.c|d.e@buns (@ picks that model's hair)
+  const list = outfits.split('|').map(o => o.split('@')), cols = Math.min(5, list.length), rows = Math.ceil(list.length / cols);
+  const cw = W / cols, ch = H / rows;
+  const heads = q.has('heads');      // ?heads: close-ups from above, the way the game camera sees hats
+  list.forEach(([o, hair], i) => {
+    const ids = o.split('.').filter(Boolean), x = i * 6, d = dress(ids, x, hair);
+    const cx = (i % cols) * cw, cy = Math.floor(i / cols) * ch;
+    if (heads) {
+      const h = new THREE.Vector3(); d.root.updateWorldMatrix(true, true); d.bones.headC.getWorldPosition(h);
+      cam.position.set(h.x + 0.35, h.y + 0.55, h.z + 1.25); cam.lookAt(h.x, h.y + 0.08, h.z); draw(cam, cx, cy, cw, ch * 0.5);
+      cam.position.set(h.x - 0.6, h.y + 0.75, h.z - 1.05); cam.lookAt(h.x, h.y + 0.06, h.z); draw(cam, cx, cy + ch * 0.5, cw, ch * 0.5);
+    } else {
+      cam.position.set(x, 1.05, 4.6); cam.lookAt(x, 0.95, 0); draw(cam, cx, cy, cw * 0.7, ch);
+      cam.position.set(x, 1.05, -4.6); cam.lookAt(x, 0.95, 0); draw(cam, cx + cw * 0.62, cy + ch * 0.35, cw * 0.38, ch * 0.65);
+    }
+    const l = document.createElement('div'); Object.assign(l.style, { position: 'absolute', left: cx + 6 + 'px', top: cy + 4 + 'px', fontSize: '12px' }); l.textContent = ids.join(' + ') + (hair ? ' · ' + hair : ''); document.body.appendChild(l);
+  });
+} else {
+  dress(ids, 0);
+  const displays = ids.map(id => CATALOG.find(c => c.id === id)).filter(Boolean);
+  displays.forEach((def, i) => { const g = makeDisplay(def, def.display === 'form' ? 0.6 : 0.55); g.position.set(40 + i * 0.75 - (displays.length - 1) * 0.375, 0, 0); scene.add(g); });
+  document.getElementById('label').textContent = ids.join(' + ');
+  const views = [[0, 0, 0.42, 0.66, [0, 1.05, 4.4]], [0.42, 0, 0.29, 0.66, [3.1, 1.2, 3.1]], [0.71, 0, 0.29, 0.66, [0, 1.05, -4.4]]];
+  for (const [vx, vy, vw, vh, pos] of views) { cam.position.set(...pos); cam.lookAt(0, 0.95, 0); draw(cam, vx * W, vy * H, vw * W, vh * H); }
+  cam.position.set(40, 0.6, 3.2); cam.lookAt(40, 0.35, 0); draw(cam, 0, 0.66 * H, W, 0.34 * H);
+}
+document.title = 'ready';
+</script>
+</body>
+</html>

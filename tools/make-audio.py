@@ -36,7 +36,7 @@ kokoro = Kokoro(os.path.join(MODELS, 'kokoro-v1.0.onnx'), os.path.join(MODELS, '
 tok = Tokenizer()
 IPA_FIX = {'ɝ': 'ɜɹ'}
 # said-alone pronunciations, stressed the way a teacher says a dictation word
-PRON = {'brick': 'bɹˈɪk.', 'chick': 'tʃˈɪk.', 'dish': 'dˈɪʃ.', 'peach': 'pˈitʃ.', 'to': 'tˈuː.', 'snowman': 'snˈoʊmˌæn.', 'cup': 'kˈʌp.', 'pot': 'pˈɑːt.', 'five': 'fˈaɪv.', 'the': 'ðˈʌ.', 'of': 'ˈʌv.'}
+PRON = {'does': 'dˈʌz.', 'brick': 'bɹˈɪk.', 'chick': 'tʃˈɪk.', 'dish': 'dˈɪʃ.', 'peach': 'pˈitʃ.', 'to': 'tˈuː.', 'snowman': 'snˈoʊmˌæn.', 'cup': 'kˈʌp.', 'pot': 'pˈɑːt.', 'five': 'fˈaɪv.', 'the': 'ðˈʌ.', 'of': 'ˈʌv.', 'puff': 'pˈʌf.'}
 
 def speed_for(cid):
     if cid.startswith('w_'): return 1.0    # slowing single words down distorts them (checked with Whisper)
@@ -89,7 +89,7 @@ def best_take(word, first, sr):
     """same voice, tiny variations in phrasing/speed; keep the first Whisper hears as the word"""
     if heard(first, sr) == word: return first
     if word in PRON:
-        for sp in [0.95, 1.08, 0.9, 1.15]:
+        for sp in [0.95, 1.08, 0.9, 1.15, 0.85]:
             s, _ = kokoro.create(PRON[word], voice=args.voice, speed=sp, lang='en-us', is_phonemes=True)
             if heard(s, sr) == word:
                 print(f'    {word}: using /{PRON[word]}/ @ {sp}', flush=True); return s

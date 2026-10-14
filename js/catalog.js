@@ -1,9 +1,9 @@
 /* The shop catalog for the first wing, and how each item is shown on a mannequin. */
 import * as THREE from 'three';
-import { wrapItem } from './clothes.js?v=51cc4124';
-import { buildDress, buildGown, buildTop, buildSkirt, buildPants } from './garments-body.js?v=51cc4124';
-import { buildShoes, buildHat, buildNecklace, buildGloves } from './garments-acc.js?v=51cc4124';
-import { buildDoll, mannequinShow, poseNeutral } from './doll.js?v=51cc4124';
+import { wrapItem } from './clothes.js?v=93c772a3';
+import { buildDress, buildGown, buildTop, buildSkirt, buildPants } from './garments-body.js?v=93c772a3';
+import { buildShoes, buildHat, buildNecklace, buildGloves } from './garments-acc.js?v=93c772a3';
+import { buildDoll, mannequinShow, poseNeutral } from './doll.js?v=93c772a3';
 
 const KINDS = { dress: buildDress, gown: buildGown, top: buildTop, skirt: buildSkirt, pants: buildPants, shoes: buildShoes, hat: buildHat, neck: buildNecklace, gloves: buildGloves };
 
@@ -53,6 +53,44 @@ export const CATALOG = [
   { id: 'partypants', name: 'Party pants', slot: 'bottom', kind: 'pants', display: 'hips', printable: true, color: '#3b2a66', print: 'sparkle', p: { flare: 0.02 }, tags: ['glam', 'disco', 'party'] },
   { id: 'goldheels', name: 'Gold heels', slot: 'shoes', kind: 'shoes', display: 'shoes', color: '#e9c48a', p: { style: 'heels' }, tags: ['glam', 'formal', 'party', 'disco', 'royal'] },
   { id: 'partyhat', name: 'Party hat', slot: 'head', kind: 'hat', display: 'head', color: '#ff8fb8', p: { style: 'party' }, tags: ['birthday', 'party', 'cute'] },
+  // ---- Beach Wing (Level 3) ----
+  { id: 'coverup', name: 'Beach cover-up', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#86c9e8', print: 'stripes', p: { neck: 'v', sleeves: 'none', sashBow: false, skirt: { yHem: -0.62, rHem: [0.36, 0.31], folds: 10, flare: 1.0 } }, tags: ['beach', 'summer', 'casual', 'tropical'] },
+  { id: 'tropicdress', name: 'Tropical dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#ff9a6a', print: 'floral', p: { neck: 'square', sleeves: 'none', skirt: { yHem: -0.45, rHem: [0.38, 0.33] } }, tags: ['tropical', 'beach', 'summer', 'party', 'floral'] },
+  { id: 'swimdress', name: 'Swim dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#6fcfc4', print: 'dots', p: { neck: 'square', sleeves: 'none', sashBow: false, skirt: { yHem: -0.24, rHem: [0.27, 0.24], folds: 12 } }, tags: ['pool', 'beach', 'summer', 'sporty'] },
+  { id: 'tank', name: 'Tank top', slot: 'top', kind: 'top', display: 'bust', printable: true, color: '#5b7fc0', print: 'stripes', p: { neck: 'square', sleeves: 'straps' }, tags: ['beach', 'summer', 'casual', 'sporty', 'surf'] },
+  { id: 'boardshorts', name: 'Board shorts', slot: 'bottom', kind: 'pants', display: 'hips', printable: true, color: '#ff9a6a', print: 'floral', p: { shorts: true }, tags: ['surf', 'beach', 'summer', 'sporty'] },
+  { id: 'sarong', name: 'Wrap skirt', slot: 'bottom', kind: 'skirt', display: 'hips', printable: true, color: '#f06aa0', print: 'floral', p: { skirt: { yHem: -0.7, rHem: [0.33, 0.29], folds: 8, flare: 1.0 } }, tags: ['tropical', 'beach', 'summer', 'pool'] },
+  { id: 'sandals', name: 'Sandals', slot: 'shoes', kind: 'shoes', display: 'shoes', color: '#e9c48a', p: { style: 'sandals' }, tags: ['beach', 'summer', 'pool', 'tropical', 'casual'] },
+  { id: 'bucket', name: 'Bucket hat', slot: 'head', kind: 'hat', display: 'head', color: '#ffd27a', p: { style: 'bucket' }, tags: ['beach', 'summer', 'surf', 'casual', 'sporty'] },
+  // ---- Gala Wing (Level 4, review) ----
+  { id: 'mermaid', name: 'Mermaid gown', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#c43b3b', print: 'sparkle', p: { neck: 'sweetheart', sleeves: 'none', sashBow: false, skirt: { yHem: -0.95, rHem: [0.5, 0.44], folds: 16, foldAmp: 0.03, flare: 1.6, off: 0.022 } }, tags: ['gala', 'glam', 'formal', 'elegant'] },
+  { id: 'velvetgown', name: 'Velvet gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#7a1f3d', print: 'sparkle', p: {}, tags: ['gala', 'royal', 'formal', 'glam'] },
+  { id: 'silvergown', name: 'Silver gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#c9d2e8', print: 'sparkle', p: { tiers: 1, sleeves: 'puff' }, tags: ['gala', 'glam', 'formal', 'elegant', 'winter'] },
+  // ---- Royal Wing (Level 5) ----
+  { id: 'royalgown', name: 'Royal gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#e9c48a', print: 'sparkle', p: {}, tags: ['royal', 'formal', 'fairytale', 'elegant', 'glam'] },
+  { id: 'fairygown', name: 'Fairy gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#a8e2cc', print: 'sparkle', p: { tiers: 1, sleeves: 'puff' }, tags: ['fairytale', 'fairy', 'royal', 'cute'] },
+  { id: 'rosegown', name: 'Rose gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#f6a9c4', print: 'floral', p: {}, tags: ['royal', 'fairytale', 'garden', 'elegant', 'floral'] },
+  { id: 'royalcrown', name: 'Royal crown', slot: 'head', kind: 'hat', display: 'head', color: '#ff5f9e', p: { style: 'royalcrown' }, tags: ['royal', 'fairytale', 'formal', 'glam', 'gala'] },
+  // ---- Winter Wing (Level 6) ----
+  { id: 'sweaterdress', name: 'Sweater dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#c9b3f2', print: 'knit', p: { neck: 'crew', sleeves: 'long', sashBow: false, skirt: { yHem: -0.4, rHem: [0.3, 0.27], folds: 8, flare: 1.0 } }, tags: ['winter', 'cozy', 'casual', 'school'] },
+  { id: 'holidaydress', name: 'Holiday dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#c43b3b', print: 'sparkle', p: { neck: 'sweetheart', sleeves: 'long', chestBow: true, skirt: { yHem: -0.48, rHem: [0.38, 0.33] } }, tags: ['holiday', 'party', 'winter', 'glam'] },
+  { id: 'snowgown', name: 'Snow gown', slot: 'dress', kind: 'gown', display: 'form', printable: true, color: '#e3edfa', print: 'sparkle', p: { tiers: 1, sleeves: 'long' }, tags: ['winter', 'royal', 'formal', 'holiday', 'icy'] },
+  { id: 'turtleneck', name: 'Turtleneck', slot: 'top', kind: 'top', display: 'bust', printable: true, color: '#fff2d9', print: 'knit', p: { neck: 'crew', sleeves: 'long', loose: true, rough: 0.95 }, tags: ['winter', 'cozy', 'school', 'casual'] },
+  { id: 'leggings', name: 'Leggings', slot: 'bottom', kind: 'pants', display: 'hips', printable: true, color: '#1d181f', p: {}, tags: ['sporty', 'winter', 'dance', 'casual'] },
+  { id: 'cozypants', name: 'Cozy pants', slot: 'bottom', kind: 'pants', display: 'hips', printable: true, color: '#e86a8a', print: 'knit', p: { flare: 0.012 }, tags: ['cozy', 'winter', 'casual'] },
+  { id: 'snowboots', name: 'Snow boots', slot: 'shoes', kind: 'shoes', display: 'shoes', color: '#ffffff', p: { style: 'boots' }, tags: ['winter', 'cozy', 'icy'] },
+  { id: 'beanie', name: 'Beanie', slot: 'head', kind: 'hat', display: 'head', printable: true, color: '#e86a8a', print: 'knit', p: { style: 'beanie' }, tags: ['winter', 'cozy', 'sporty', 'casual'] },
+  { id: 'scarf', name: 'Scarf', slot: 'neck', kind: 'neck', display: 'neck', printable: true, color: '#c43b3b', print: 'knit', p: { style: 'scarf' }, tags: ['winter', 'cozy', 'holiday'] },
+  // ---- Sport Wing (Level 7) ----
+  { id: 'tennisdress', name: 'Tennis dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#ffffff', p: { neck: 'v', sleeves: 'none', sashBow: false, skirt: { yHem: -0.22, rHem: [0.26, 0.22], folds: 22, foldAmp: 0.012, flare: 0.9 } }, tags: ['tennis', 'sporty', 'school'] },
+  { id: 'dancedress', name: 'Dance dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#f6a9c4', print: 'sparkle', p: { neck: 'sweetheart', sleeves: 'straps', skirt: { yHem: -0.26, rHem: [0.36, 0.32], folds: 18 }, frill: { y: -0.26, r: [0.36, 0.32], drop: 0.06, n: 50 } }, tags: ['dance', 'party', 'cute', 'sporty'] },
+  { id: 'sportydress', name: 'Sporty dress', slot: 'dress', kind: 'dress', display: 'form', printable: true, color: '#5b7fc0', print: 'stripes', p: { neck: 'crew', sleeves: 'short', sashBow: false, skirt: { yHem: -0.35, rHem: [0.3, 0.27] } }, tags: ['sporty', 'team', 'casual', 'school'] },
+  { id: 'jersey', name: 'Jersey', slot: 'top', kind: 'top', display: 'bust', printable: true, color: '#c43b3b', print: 'stripes', p: { neck: 'crew', sleeves: 'short' }, tags: ['sporty', 'team', 'school'] },
+  { id: 'sweatshirt', name: 'Sweatshirt', slot: 'top', kind: 'top', display: 'bust', printable: true, color: '#7a8fd6', p: { neck: 'crew', sleeves: 'long', loose: true, rough: 0.9 }, tags: ['sporty', 'cozy', 'casual', 'team'] },
+  { id: 'tennisskirt', name: 'Tennis skirt', slot: 'bottom', kind: 'skirt', display: 'hips', printable: true, color: '#ffffff', p: { skirt: { yHem: -0.2, rHem: [0.23, 0.2], folds: 24, foldAmp: 0.012, flare: 0.9 } }, tags: ['tennis', 'sporty', 'school'] },
+  { id: 'trackpants', name: 'Track pants', slot: 'bottom', kind: 'pants', display: 'hips', printable: true, color: '#24306e', print: 'stripes', p: { flare: 0.008 }, tags: ['sporty', 'team', 'casual'] },
+  { id: 'hightops', name: 'High-tops', slot: 'shoes', kind: 'shoes', display: 'shoes', color: '#f06aa0', p: { style: 'hightops' }, tags: ['sporty', 'dance', 'casual', 'team'] },
+  { id: 'cap', name: 'Baseball cap', slot: 'head', kind: 'hat', display: 'head', color: '#5b7fc0', p: { style: 'cap' }, tags: ['sporty', 'team', 'casual', 'school'] },
 ];
 /* what each wing's shop shows: 6 dress forms + 4 shelf niches of 6 (null = empty spot) */
 export const WINGS = [
@@ -60,6 +98,16 @@ export const WINGS = [
     shelves: ['blouse', 'tee', 'cami', 'sweater', 'bowtop', 'gloves', 'aline', 'mini', 'tutu', 'jeans', 'shorts', null, 'maryjanes', 'heels', 'sneakers', 'boots', 'pearls', 'heart', 'sunhat', 'tiara', 'crown', 'beret', 'bows', null] },
   { name: 'Party Wing', tint: { wall: '#ece2f8', niche: '#cbb4ee', velvet: '#c9a8f0', rug: '#e6d6ff' }, forms: ['partydress', 'stargown', 'disco', 'princess', 'gown', 'coquette'],
     shelves: ['sparklecami', 'stripetop', 'bowtop', 'blouse', 'cami', 'gloves', 'maxiskirt', 'partypants', 'tutu', 'mini', 'aline', null, 'goldheels', 'heels', 'maryjanes', 'sneakers', 'pearls', 'heart', 'partyhat', 'tiara', 'bows', 'crown', 'beret', null] },
+  { name: 'Beach Wing', tint: { wall: '#e2f3f1', niche: '#a8dcd6', velvet: '#7cc9c0', rug: '#d6f2ee' }, forms: ['coverup', 'tropicdress', 'swimdress', 'maxi', 'sundress', 'picnic'],
+    shelves: ['tank', 'tee', 'cami', 'blouse', 'bowtop', null, 'boardshorts', 'sarong', 'shorts', 'aline', 'mini', null, 'sandals', 'sneakers', 'maryjanes', 'pearls', 'heart', null, 'bucket', 'sunhat', 'crown', 'bows', null, null] },
+  { name: 'Gala Wing', tint: { wall: '#f1e6da', niche: '#dcc09a', velvet: '#b8325f', rug: '#f6dccd' }, forms: ['mermaid', 'velvetgown', 'silvergown', 'stargown', 'gown', 'princess'],
+    shelves: ['sparklecami', 'blouse', 'cami', 'bowtop', 'gloves', null, 'partypants', 'maxiskirt', 'aline', 'tutu', null, null, 'goldheels', 'heels', 'maryjanes', 'pearls', 'heart', null, 'royalcrown', 'tiara', 'bows', 'crown', null, null] },
+  { name: 'Royal Wing', tint: { wall: '#e7e5f7', niche: '#b9b4e8', velvet: '#7c6fd0', rug: '#ddd9ff' }, forms: ['royalgown', 'fairygown', 'rosegown', 'princess', 'stargown', 'coquette'],
+    shelves: ['blouse', 'bowtop', 'sparklecami', 'cami', 'gloves', null, 'tutu', 'maxiskirt', 'aline', 'mini', null, null, 'goldheels', 'maryjanes', 'heels', 'pearls', 'heart', null, 'royalcrown', 'tiara', 'crown', 'bows', null, null] },
+  { name: 'Winter Wing', tint: { wall: '#e6eef7', niche: '#bcd2ea', velvet: '#8fb3e0', rug: '#e3edfa' }, forms: ['sweaterdress', 'holidaydress', 'snowgown', 'picnic', 'silvergown', 'gown'],
+    shelves: ['sweater', 'turtleneck', 'stripetop', 'blouse', 'gloves', null, 'jeans', 'leggings', 'cozypants', 'aline', 'mini', null, 'boots', 'snowboots', 'sneakers', 'scarf', 'pearls', 'heart', 'beanie', 'beret', 'tiara', 'bows', null, null] },
+  { name: 'Sport Wing', tint: { wall: '#eef6e6', niche: '#c4e6b0', velvet: '#6fbf7e', rug: '#e4f5d8' }, forms: ['tennisdress', 'dancedress', 'sportydress', 'swimdress', 'picnic', 'sundress'],
+    shelves: ['jersey', 'sweatshirt', 'tee', 'tank', 'sweater', null, 'tennisskirt', 'trackpants', 'leggings', 'shorts', 'tutu', null, 'sneakers', 'hightops', 'sandals', 'heart', null, null, 'cap', 'bucket', 'beanie', 'bows', null, null] },
 ];
 export const byId = id => CATALOG.find(d => d.id === id);
 

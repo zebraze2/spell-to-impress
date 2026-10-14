@@ -1,5 +1,5 @@
 /* HTML overlay: banner, nameplates, the "Spell it!" bubble, spelling card, colour / hair / makeup panels. */
-import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=51cc4124';
+import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=93c772a3';
 
 const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -246,23 +246,27 @@ function chips(host, items, sel, label, onPick, gate) {
 const h3 = (host, t) => { const e = document.createElement('h3'); e.textContent = t; host.appendChild(e); };
 const note = (host, t) => { const e = document.createElement('p'); e.className = 'pnote'; e.textContent = t; host.appendChild(e); };
 
-/* colours and patterns each unlock with one spelled word (per item). unlock(kind, done(ok)) asks for the word. */
+/* colours and patterns each unlock with one spelled word (per item). unlock(kind, done(ok)) asks for the word.
+   While a section is locked nothing in it changes the item: tapping a colour or pattern there asks for the word
+   too (like the lock button), and spelling it gives her the one she tapped. */
 UI.colors = (item, palette, prints, onDone, unlock) => {
   openPanel(item.def.name, onDone);
   const again = () => UI.colors(item, palette, prints, onDone, unlock);
   const section = (host, title, open, kind, label, fill) => {
     h3(host, title);
     const box = document.createElement('div'); box.className = 'sec' + (open ? '' : ' locked'); host.appendChild(box);
-    fill(box);
+    const ask = then => unlock(kind, ok => { if (ok && then) then(); again(); });     // redraw either way (clears a tapped highlight)
+    fill(box, pick => open ? pick : v => ask(() => pick(v)));
     if (!open) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'unlockbtn'; b.innerHTML = LOCK + `<span>${label}</span>`;
-      b.onclick = () => unlock(kind, ok => { if (ok) again(); });
+      b.onclick = () => ask();
       box.appendChild(b);
     }
   };
-  section($('panelA'), 'Color', !unlock || item.colorsOpen, 'colors', 'Spell a word to change the color', box => hearts(box, palette, item.color, c => item.setColor(c)));
+  section($('panelA'), 'Color', !unlock || item.colorsOpen, 'colors', 'Spell a word to change the color',
+    (box, guard) => hearts(box, palette, item.color, guard(c => item.setColor(c))));
   if (item.def.printable) section($('panelB'), 'Pattern', !unlock || item.printsOpen, 'prints', 'Spell a word to change the pattern',
-    box => chips(box, prints, item.print || 'solid', p => p[0].toUpperCase() + p.slice(1), p => item.setColor(item.color, p)));
+    (box, guard) => chips(box, prints, item.print || 'solid', p => p[0].toUpperCase() + p.slice(1), guard(p => item.setColor(item.color, p))));
 };
 UI.hair = (styles, colors, cur, onPick, onDone, gate) => {
   openPanel('Hair salon', onDone);
@@ -292,7 +296,7 @@ UI.makeup = (looks, lips, cur, onPick, onDone, gate) => {
 UI.start = (level, theme, onGo) => {
   $('startKicker').textContent = `Level ${level.n} · ${level.wing}`;
   $('startTitle').textContent = level.title;
-  $('startTeach').textContent = 'Two new spelling ideas:';
+  $('startTeach').textContent = level.review ? `A review of levels ${level.review[0]}–${level.review[level.review.length - 1]}: no new ideas, just practice.` : 'Two new spelling ideas:';
   $('startPoints').innerHTML = level.ideas.map(i => `<div><b>${i.label}</b><span>${i.rule} <i>${i.eg}</i></span></div>`).join('');
   $('startTheme').textContent = theme.name;
   $('startCard').hidden = false;
@@ -336,7 +340,7 @@ UI.home = (levels, stats, unlocked, onPick) => {
     const st = stats[i], open = L.n <= unlocked, b = document.createElement('button');
     b.type = 'button'; b.className = 'lvl' + (open ? '' : ' locked');
     const pct = Math.round(st.known / st.n * 100);
-    b.innerHTML = `<div class="ln">Level ${L.n}</div><div class="lw">${L.wing}</div><div class="li">${L.ideas.map(x => x.label).join('  +  ')}</div>`
+    b.innerHTML = `<div class="ln">Level ${L.n}${L.review ? ' · review' : ''}</div><div class="lw">${L.wing}</div><div class="li">${L.review ? 'Everything from levels ' + L.review[0] + '–' + L.review[L.review.length - 1] : L.ideas.map(x => x.label).join('  +  ')}</div>`
       + (open ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="lp">${st.quiz ? `${st.known} of ${st.n} words known` : 'Starts with a pop quiz'}</div><div class="go">Play</div>`
         : `<div class="lp">${LOCK} Spell 80% right in Level ${L.n - 1} to unlock</div>`);
     if (open) b.onclick = () => { $('homeCard').hidden = true; onPick(i); };

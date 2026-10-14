@@ -1,8 +1,8 @@
 /* Clothing items. An item = meshes on named bones + "dyeable" materials.
    item.setColor(hex, print) recolours it (prints are regenerated from the base colour). */
 import * as THREE from 'three';
-import { printTex } from './textures.js?v=51cc4124';
-import { shade } from './util.js?v=51cc4124';
+import { printTex } from './textures.js?v=93c772a3';
+import { shade } from './util.js?v=93c772a3';
 
 export const SLOTS = ['dress', 'top', 'bottom', 'shoes', 'head', 'neck', 'hands'];
 
@@ -10,9 +10,10 @@ export function fabric(rough = 0.75, extra = {}) { return new THREE.MeshStandard
 export function innerFabric() { return new THREE.MeshStandardMaterial({ color: '#888888', roughness: 0.9, side: THREE.BackSide }); }
 
 /* Wrap a built garment into an item.
-   built = { parts: [{bone, obj}], main: [materials that take the colour/print], inner: [back faces, darker], accent: [materials tinted a lighter/darker shade] } */
+   built = { parts: [{bone, obj}], main: [materials that take the colour/print], inner: [back faces, darker], accent: [materials tinted a lighter/darker shade],
+           fit: for hats, the space inside the hat that the hair is tucked into (see fitHair in doll.js) } */
 export function wrapItem(def, built, color, print) {
-  const item = { def, id: def.id, slot: def.slot, parts: built.parts, main: built.main || [], inner: built.inner || [], accent: built.accent || [], color: null, print: null };
+  const item = { def, id: def.id, slot: def.slot, parts: built.parts, main: built.main || [], inner: built.inner || [], accent: built.accent || [], fit: built.fit || null, color: null, print: null };
   for (const p of item.parts) p.obj.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
   item.setColor = (c, pr) => {
     item.color = c; item.print = pr === undefined ? item.print : pr;
