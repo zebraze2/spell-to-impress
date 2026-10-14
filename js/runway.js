@@ -1,9 +1,9 @@
 /* The runway show: a separate hall, every model walks, the others vote 1–5 stars, top three take the podium. */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { TAU, rng, canvasTex, V3, lerp, smooth } from './util.js?v=cc5f8249';
-import { TEX } from './textures.js?v=cc5f8249';
-import { M } from './props.js?v=cc5f8249';
+import { TAU, rng, canvasTex, V3, lerp, smooth } from './util.js?v=8bebf9f5';
+import { TEX } from './textures.js?v=8bebf9f5';
+import { M } from './props.js?v=8bebf9f5';
 
 export const RW = { x: 60, z: 0, top: 0.3, start: -7.4, end: 3.4 };     // hall origin, runway height, walk path (z)
 

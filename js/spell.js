@@ -6,7 +6,7 @@
    - In a round: missed words first, then unseen ones; a known word is mixed in now and then (spaced review).
      The first words of each idea are "fill the sound"; a missed word comes back a few words later.
    - First tries count toward the 80% that unlocks the next wing. */
-import { LEVELS, phraseId } from './words.js?v=cc5f8249';
+import { LEVELS, phraseId } from './words.js?v=8bebf9f5';
 
 export const PASS = 0.8;
 export const MIN_TRIES = 8;          // need at least this many scored tries in a round to unlock the next wing

@@ -1,9 +1,9 @@
 /* The shop catalog for the first wing, and how each item is shown on a mannequin. */
 import * as THREE from 'three';
-import { wrapItem } from './clothes.js?v=cc5f8249';
-import { buildDress, buildGown, buildTop, buildSkirt, buildPants } from './garments-body.js?v=cc5f8249';
-import { buildShoes, buildHat, buildNecklace, buildGloves } from './garments-acc.js?v=cc5f8249';
-import { buildDoll, mannequinShow, poseNeutral } from './doll.js?v=cc5f8249';
+import { wrapItem } from './clothes.js?v=8bebf9f5';
+import { buildDress, buildGown, buildTop, buildSkirt, buildPants } from './garments-body.js?v=8bebf9f5';
+import { buildShoes, buildHat, buildNecklace, buildGloves } from './garments-acc.js?v=8bebf9f5';
+import { buildDoll, mannequinShow, poseNeutral } from './doll.js?v=8bebf9f5';
 
 const KINDS = { dress: buildDress, gown: buildGown, top: buildTop, skirt: buildSkirt, pants: buildPants, shoes: buildShoes, hat: buildHat, neck: buildNecklace, gloves: buildGloves };
 

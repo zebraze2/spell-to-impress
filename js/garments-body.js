@@ -1,11 +1,11 @@
 /* Builders for body garments: dresses, gowns, tops, skirts, trousers.
    Each returns { parts, main, inner, accent } for wrapItem(). */
 import * as THREE from 'three';
-import { TAU, lerp, smooth, gridGeo, arcUV, cached, V3 } from './util.js?v=cc5f8249';
-import { PELVIS_KEYS, CHEST_KEYS, ringAt } from './doll.js?v=cc5f8249';
-import { fabric, innerFabric } from './clothes.js?v=cc5f8249';
-import { TEX } from './textures.js?v=cc5f8249';
-import { bodiceGeo, strapGeo, skirtGeo, frillGeo, puffSleeveGeo, upperSleeveGeo, forearmSleeveGeo, cuffGeo, hipShellGeo, thighTubeGeo, shinTubeGeo, makeBow, waistbandGeo } from './garment-shapes.js?v=cc5f8249';
+import { TAU, lerp, smooth, gridGeo, arcUV, cached, V3 } from './util.js?v=8bebf9f5';
+import { PELVIS_KEYS, CHEST_KEYS, ringAt } from './doll.js?v=8bebf9f5';
+import { fabric, innerFabric } from './clothes.js?v=8bebf9f5';
+import { TEX } from './textures.js?v=8bebf9f5';
+import { bodiceGeo, strapGeo, skirtGeo, frillGeo, puffSleeveGeo, upperSleeveGeo, forearmSleeveGeo, cuffGeo, hipShellGeo, thighTubeGeo, shinTubeGeo, makeBow, waistbandGeo } from './garment-shapes.js?v=8bebf9f5';
 
 const WHITE_TRIM = () => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.7, side: THREE.DoubleSide });
 const g = (...objs) => { const o = new THREE.Group(); objs.forEach(x => o.add(x)); return o; };

@@ -4,21 +4,22 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=cc5f8249';
-import { buildDoll, animateDoll } from './doll.js?v=cc5f8249';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=cc5f8249';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=cc5f8249';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=cc5f8249';
-import { PRINTS, TEX } from './textures.js?v=cc5f8249';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=cc5f8249';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=cc5f8249';
-import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=cc5f8249';
-import { LEVELS } from './words.js?v=cc5f8249';
-import { buildRunway, makeShow, RW } from './runway.js?v=cc5f8249';
-import { UI } from './ui.js?v=cc5f8249';
+import { buildRoom } from './room.js?v=8bebf9f5';
+import { buildDoll, animateDoll } from './doll.js?v=8bebf9f5';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=8bebf9f5';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=8bebf9f5';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=8bebf9f5';
+import { PRINTS, TEX } from './textures.js?v=8bebf9f5';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=8bebf9f5';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=8bebf9f5';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=8bebf9f5';
+import { LEVELS } from './words.js?v=8bebf9f5';
+import { buildRunway, makeShow, RW } from './runway.js?v=8bebf9f5';
+import { UI } from './ui.js?v=8bebf9f5';
 
 const QS = new URLSearchParams(location.search);
-if (QS.has('reset')) { resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }   // ?reset starts over (for play-testing)
+// ?reset starts over, for play-testing on this computer only: the live site ignores it, so an old link can't wipe her progress
+if (QS.has('reset')) { if (location.hostname === 'localhost') resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }
 const PLAYABLE = 7;                                   // levels built so far
 const UNLOCKED = QS.has('unlock') ? PLAYABLE : Math.min(PLAYABLE, unlockedLevel());
 const LEVEL = Math.max(1, Math.min(UNLOCKED, Number(QS.get('level')) || loadProgress().last || 1)) - 1;
