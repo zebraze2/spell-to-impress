@@ -1,7 +1,7 @@
 /* Garment geometry fitted to the doll's body profiles (chest, pelvis, limbs). */
 import * as THREE from 'three';
-import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, arcUV, smoothSeams, cached, crSample, tubeLathe, bodyLathe } from './util.js?v=8bebf9f5';
-import { CHEST_KEYS, PELVIS_KEYS, ARM_KEYS, FARM_KEYS, THIGH_KEYS, SHIN_KEYS, ringAt } from './doll.js?v=8bebf9f5';
+import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, arcUV, smoothSeams, cached, crSample, tubeLathe, bodyLathe } from './util.js?v=36d70f72';
+import { CHEST_KEYS, PELVIS_KEYS, ARM_KEYS, FARM_KEYS, THIGH_KEYS, SHIN_KEYS, ringAt } from './doll.js?v=36d70f72';
 
 /* neckline height around the chest; th: angle (0 = front), returns y in chest space */
 function neckline(neck, s, c) {

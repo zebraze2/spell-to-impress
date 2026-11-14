@@ -1,5 +1,5 @@
 /* HTML overlay: banner, nameplates, the "Spell it!" bubble, spelling card, colour / hair / makeup panels. */
-import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=8bebf9f5';
+import { dictate, dictatePhrase, sayWord, stopAudio, sayPattern } from './spell.js?v=36d70f72';
 
 const $ = id => document.getElementById(id);
 const SPEAKER = '<svg viewBox="0 0 24 24"><path d="M4 9.2h3.4L12 5v14l-4.6-4.2H4z" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.2 9.2c1.1 1.6 1.1 4 0 5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -43,7 +43,7 @@ export const UI = {
 /* the word with its pattern letters highlighted (chunk can be one string or several) */
 export function revealHTML(word) {
   const chunks = [].concat(word.chunk || word.team || []), w = word.w, marks = new Array(w.length).fill(false);
-  for (const c of chunks) { const i = w.indexOf(c); if (i >= 0) for (let k = i; k < i + c.length; k++) marks[k] = true; }
+  for (const c of chunks) { const i = chunks.length === 1 && word.at != null ? word.at : w.indexOf(c); if (i >= 0) for (let k = i; k < i + c.length; k++) marks[k] = true; }
   let out = '', open = false;
   for (let k = 0; k < w.length; k++) {
     if (marks[k] && !open) { out += `<span class="team${word.heart ? ' heart' : ''}">`; open = true; }
@@ -64,7 +64,7 @@ UI.spell = (word, forName, cb, { mode = 'word', phrase = '', words = [], quiz = 
   const card = $('spellCard'), input = $('spellInput'), prompt = $('spellPrompt'), reveal = $('spellReveal'), speak = $('spellSpeak'), fillRow = $('spellFill');
   const target = mode === 'phrase' ? phrase : mode === 'fill' ? word.chunk : word.w;
   const nWords = mode === 'phrase' ? phrase.split(' ').length : 1;
-  const ask = { word: 'Spell the missing word.', fill: 'Type the letters for the missing sound.', phrase: `Spell the whole phrase: ${nWords} words.` }[mode];
+  const ask = { word: 'Spell the missing word.', fill: 'Type the missing letters.', phrase: `Spell the whole phrase: ${nWords} words.` }[mode];
   // what to spell, made obvious without showing the spelling: the sentence with a blank, or one box per phrase word
   const cloze = $('spellCloze');
   if (mode === 'phrase') cloze.innerHTML = '<span class="pbox"></span>'.repeat(nWords);
@@ -77,8 +77,8 @@ UI.spell = (word, forName, cb, { mode = 'word', phrase = '', words = [], quiz = 
   const showAsk = () => {
     reveal.hidden = true; prompt.textContent = state === 'retype' ? (mode === 'fill' ? 'Now fill it in again.' : 'Now spell it from memory.') : ask;
     if (mode === 'fill') {
-      const i = word.w.indexOf(word.chunk);
-      fillRow.innerHTML = `<span>${word.w.slice(0, i)}</span><input class="chunk" maxlength="3" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><span>${word.w.slice(i + word.chunk.length)}</span>`;
+      const i = word.at ?? word.w.indexOf(word.chunk), n = Math.max(3, word.chunk.length);   // endings like -less need a wider box
+      fillRow.innerHTML = `<span>${word.w.slice(0, i)}</span><input class="chunk" maxlength="${n}" style="width:${n * 26 + 14}px" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><span>${word.w.slice(i + word.chunk.length)}</span>`;
       fillRow.hidden = false; input.hidden = true; box = fillRow.querySelector('input');
     } else { fillRow.hidden = true; input.hidden = false; input.value = ''; box = input; }
     box.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); check(); } e.stopPropagation(); };

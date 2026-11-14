@@ -1,11 +1,11 @@
 /* Builders for shoes, headwear, necklaces and gloves. */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, smoothSeams, cached, limbLathe, crSample } from './util.js?v=8bebf9f5';
-import { CHEST_KEYS, ARM_KEYS, FARM_KEYS, ringAt, headShape, mittenGeo } from './doll.js?v=8bebf9f5';
-import { fabric } from './clothes.js?v=8bebf9f5';
-import { TEX } from './textures.js?v=8bebf9f5';
-import { makeBow, shinTubeGeo } from './garment-shapes.js?v=8bebf9f5';
+import { TAU, lerp, smooth, V3, gridGeo, ribbonTube, smoothSeams, cached, limbLathe, crSample } from './util.js?v=36d70f72';
+import { CHEST_KEYS, ARM_KEYS, FARM_KEYS, ringAt, headShape, mittenGeo } from './doll.js?v=36d70f72';
+import { fabric } from './clothes.js?v=36d70f72';
+import { TEX } from './textures.js?v=36d70f72';
+import { makeBow, shinTubeGeo } from './garment-shapes.js?v=36d70f72';
 
 const mesh = (geo, mat) => new THREE.Mesh(geo, mat);
 export const pearlMat = new THREE.MeshStandardMaterial({ color: '#fff4ec', roughness: 0.16, emissive: '#3a2a30', emissiveIntensity: 0.25 });
@@ -25,7 +25,8 @@ export function shoeGeo({ heelH = 0.034, wid = 0.054, upperH = 0.033, point = 0,
   }, true));
 }
 export function buildShoes(p) {
-  const sporty = p.style === 'sneakers' || p.style === 'hightops';
+  const sporty = p.style === 'sneakers' || p.style === 'hightops', slipper = p.style === 'slippers';
+  const pom = slipper ? new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1 }) : null;
   const up = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: sporty ? 0.6 : 0.24 });
   const sole = new THREE.MeshStandardMaterial({ color: sporty ? '#ffffff' : '#f2b8c9', roughness: 0.55 });
   const parts = [], accent = [];
@@ -38,6 +39,11 @@ export function buildShoes(p) {
         grp.add(mesh(cached('sandalstrap' + z, () => ribbonTube(curve, { width: () => 0.009, thick: () => 0.003, segs: 18, radial: 8, ref: (P, t, R) => R.set(P.x, P.y + 0.07, 0) })), up));
       }
       const flower = mesh(cached('sandalflower', () => new THREE.SphereGeometry(0.011, 10, 8)), pearlMat); flower.position.set(0, -0.036, 0.06); grp.add(flower);
+    } else if (slipper) {                     // fuzzy slippers with a pom-pom
+      up.roughness = 1;
+      grp.add(mesh(shoeGeo({ heelH: 0, wid: 0.07, upperH: 0.05, round: 1 }), up));
+      const so = mesh(shoeGeo({ heelH: 0, wid: 0.072, upperH: 0.01, round: 1 }), sole); so.position.y = -0.003; grp.add(so);
+      const b = mesh(cached('slipperpom', () => new THREE.SphereGeometry(0.024, 14, 10)), pom); b.position.set(0, -0.03, 0.072); grp.add(b);
     } else if (sporty) {
       grp.add(mesh(shoeGeo({ heelH: 0, wid: 0.064, upperH: 0.05, round: 1 }), up));
       const so = mesh(shoeGeo({ heelH: 0, wid: 0.07, upperH: 0.012, round: 1 }), sole); so.position.y = -0.002; so.scale.set(1, 1, 1.03); grp.add(so);
@@ -45,10 +51,11 @@ export function buildShoes(p) {
       // high-tops: a snug collar up over the ankle bone (pants legs go over it, like real ones)
       if (p.style === 'hightops') parts.push({ bone: 'shin' + S, obj: mesh(shinTubeGeo({ start: 0.36, end: 0.47, ease: 0.011, flare: 0.007 }), up) });
     } else {
-      const point = p.style === 'heels' ? 1 : 0;
+      const point = p.style === 'heels' || p.western ? 1 : 0;
       grp.add(mesh(shoeGeo({ point }), up));
       const so = mesh(shoeGeo({ point, upperH: 0.004, wid: 0.06 }), sole); so.position.y = -0.0045; grp.add(so);
-      const hh = 0.034;
+      const hh = p.western ? 0.044 : 0.034;
+      if (p.chunky) { so.scale.set(1.12, 1, 1.06); so.position.y = -0.009; }
       const hl = p.style === 'heels' ? mesh(cached('stiletto', () => new THREE.CylinderGeometry(0.0045, 0.003, hh + 0.004, 10)), up) : mesh(cached('blockheel', () => new RoundedBoxGeometry(0.026, hh + 0.004, 0.028, 2, 0.005)), sole);
       hl.position.set(0, -0.075 + hh / 2 - 0.002, -0.03); grp.add(hl);
       if (p.style === 'maryjanes') {
@@ -57,17 +64,33 @@ export function buildShoes(p) {
         const btn = mesh(cached('mjbtn', () => new THREE.SphereGeometry(0.0055, 12, 10)), pearlMat); btn.position.set(side * 0.029, -0.052, 0.02); grp.add(btn);
       }
       if (p.style === 'boots') {
-        // the shaft is a little wider than a pants leg, so pants tuck into boots
-        parts.push({ bone: 'shin' + S, obj: mesh(shinTubeGeo({ start: 0.13, end: 0.43, ease: 0.022, flare: 0.01 }), up) });
+        // the shaft is a little wider than a pants leg, so pants tuck into boots (short: ankle boots, chunky: moon boots)
+        const start = p.short ? 0.31 : p.western ? 0.09 : 0.13;
+        parts.push({ bone: 'shin' + S, obj: mesh(shinTubeGeo({ start, end: 0.43, ease: p.chunky ? 0.034 : 0.022, flare: p.chunky ? 0.006 : 0.014 }), up) });
       }
     }
     parts.push({ bone: 'ankle' + S, obj: grp });
   }
   if (sporty) accent.push(sole);
-  return { parts, main: [up], inner: [], accent: [], accentShade: 0 };
+  return { parts, main: [up], inner: [], accent: slipper ? [pom] : [], accentShade: slipper ? 0.5 : 0 };
 }
 
 /* ---------------- headwear ---------------- */
+/* a headband from ear to ear over the top of the head, a little forward of the crown */
+const bandDir = (t, d = new THREE.Vector3()) => d.set(Math.sin(t), Math.cos(t), 0.34).normalize();
+function bandAt(t, lift) { const n = bandDir(t); return { p: headShape(n.x, n.y, n.z, new THREE.Vector3(), lift), n }; }
+function headband(mat, lift = 0.03) {
+  return mesh(cached('headband' + lift, () => {
+    const pts = []; for (let i = 0; i <= 40; i++) pts.push(bandAt(-1.32 + 2.64 * i / 40, lift).p);
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, 0.0075, 8);
+  }), mat);
+}
+function starShape(r, inner = 0.45) {
+  const sh = new THREE.Shape();
+  for (let k = 0; k < 10; k++) { const a = Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * inner : r; k ? sh.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : sh.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+  sh.closePath(); return sh;
+}
+const starGeo = () => cached('star3d', () => { const g = new THREE.ExtrudeGeometry(starShape(0.03), { depth: 0.008, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 }); g.center(); return g; });
 function sunHatGeo() {
   return cached('sunhat', () => {
     const P = [[0.172, -0.012], [0.25, -0.024], [0.33, -0.04], [0.372, -0.052], [0.381, -0.046], [0.377, -0.036], [0.33, -0.024], [0.25, -0.006], [0.18, 0.006], [0.172, 0.03], [0.166, 0.075], [0.155, 0.105], [0.12, 0.13], [0.06, 0.142], [0.0005, 0.145]];
@@ -86,14 +109,18 @@ export function buildHat(p) {
   const grp = new THREE.Group(), main = [], accent = [];
   let fit = null;                             // for hats the hair tucks into (see fitHair in doll.js)
   if (p.style === 'sun') {
-    const straw = new THREE.MeshStandardMaterial({ map: TEX.straw, color: '#fff6e4', roughness: 0.82, side: THREE.DoubleSide });
+    // felt: the whole hat takes the colour (the runway hat); otherwise straw with a coloured ribbon
+    const straw = p.felt ? fabric(0.7) : new THREE.MeshStandardMaterial({ map: TEX.straw, color: '#fff6e4', roughness: 0.82, side: THREE.DoubleSide });
+    straw.side = THREE.DoubleSide;
     const ribbon = fabric(0.32);
     grp.add(mesh(sunHatGeo(), straw));
     const bandPts = []; for (let i = 0; i <= 6; i++) bandPts.push(new THREE.Vector2(0.1755 - i / 6 * 0.0025, 0.004 + i / 6 * 0.04));
     grp.add(mesh(cached('hatband', () => smoothSeams(new THREE.LatheGeometry(bandPts, 64))), ribbon));
     const bow = makeBow(ribbon, 1.3); bow.position.set(-0.135, 0.03, 0.115); bow.rotation.set(0, -0.86, 0); grp.add(bow);
     grp.position.set(0.004, 0.105, -0.012); grp.rotation.set(-0.16, 0, -0.1);
+    if (p.big) grp.scale.setScalar(1.22);
     fit = { obj: grp, c: [0, 0, 0], r: [0.16, 0.13, 0.16] };
+    if (p.felt) { main.push(straw); accent.push(ribbon); return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent, accentShade: -0.45, fit }; }
     main.push(ribbon);
   } else if (p.style === 'beret') {
     const m = fabric(0.92);
@@ -103,8 +130,9 @@ export function buildHat(p) {
     fit = { obj: grp, c: [0, -0.03, 0], r: [0.17, 0.085, 0.17] };
     main.push(m);
   } else if (p.style === 'tiara') {
-    const met = silver(), gem = new THREE.MeshStandardMaterial({ color: '#ffd6ef', metalness: 0.2, roughness: 0.05, emissive: '#ff8fcf', emissiveIntensity: 0.25 });
-    const clear = new THREE.MeshStandardMaterial({ color: '#f2f8ff', metalness: 0.3, roughness: 0.04, emissive: '#cfe3ff', emissiveIntensity: 0.2 });
+    const met = silver(), gem = p.pearls ? new THREE.MeshStandardMaterial({ color: '#fff4ec', roughness: 0.16, emissive: '#3a2a30', emissiveIntensity: 0.25 })
+      : new THREE.MeshStandardMaterial({ color: '#ffd6ef', metalness: 0.2, roughness: 0.05, emissive: '#ff8fcf', emissiveIntensity: 0.25 });
+    const clear = p.pearls ? gem : new THREE.MeshStandardMaterial({ color: '#f2f8ff', metalness: 0.3, roughness: 0.04, emissive: '#cfe3ff', emissiveIntensity: 0.2 });
     const v = new THREE.Vector3(), lat = 0.66, pts = [];
     const at = (psi, lift = 0) => { headShape(Math.sin(psi) * Math.cos(lat), Math.sin(lat), Math.cos(psi) * Math.cos(lat), v, 0.026 + lift); return v.clone(); };
     for (let i = 0; i <= 40; i++) pts.push(at(-1.25 + 2.5 * i / 40));
@@ -114,11 +142,15 @@ export function buildHat(p) {
       const base = at(psi), nrm = at(psi, 0.02).sub(base).normalize().add(V3(0, 1.4, 0)).normalize();
       const arcPts = [base.clone().add(V3(Math.cos(psi) * -0.014, 0, Math.sin(psi) * 0.014)), base.clone().addScaledVector(nrm, h * 0.7), base.clone().add(V3(Math.cos(psi) * 0.014, 0, -Math.sin(psi) * 0.014))];
       grp.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arcPts), 12, 0.0034, 6), met));
+      if (p.pearls) {                         // a pearl on every point, the biggest in the middle
+        const pl = mesh(cached('tpearl', () => new THREE.SphereGeometry(1, 16, 12)), gem); pl.scale.setScalar(i === 3 ? 0.016 : 0.0105);
+        pl.position.copy(base).addScaledVector(nrm, h); grp.add(pl); return;
+      }
       const gm = mesh(cached('gem' + (i === 3), () => new THREE.OctahedronGeometry(i === 3 ? 0.018 : 0.011, 0)), i % 2 === 1 ? clear : gem);
       gm.position.copy(base).addScaledVector(nrm, h); gm.scale.set(1, 1.45, 0.7); gm.lookAt(gm.position.clone().add(nrm)); gm.rotateX(Math.PI / 2); grp.add(gm);
     });
     main.push(gem);
-    return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent: [], onColor: c => gem.emissive.set(c) };
+    return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent: [], onColor: p.pearls ? null : c => gem.emissive.set(c) };
   } else if (p.style === 'crown') {           // flower crown: leafy band + blossoms
     const leaf = new THREE.MeshStandardMaterial({ color: '#6fae6a', roughness: 0.6 }), petal = fabric(0.5), mid = new THREE.MeshStandardMaterial({ color: '#ffd54a', roughness: 0.5 });
     const v = new THREE.Vector3(), lat = 0.5, pts = [];
@@ -179,6 +211,85 @@ export function buildHat(p) {
     grp.position.set(0.0, 0.2, -0.01); grp.rotation.set(-0.1, 0, 0.04);
     main.push(gem);
     return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent: [], onColor: c => gem.emissive.set(c), fit: { obj: grp, c: [0, -0.0275, 0], r: [0.116, 0.115, 0.116], blend: 0.05 } };
+  } else if (p.style === 'starband') {        // a headband with three stars standing up on it
+    const shine = new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 0.35, roughness: 0.22, emissiveIntensity: 0.18 });
+    grp.add(headband(gold(), 0.03));
+    for (const [t, sc] of [[-0.6, 0.75], [0, 1.15], [0.6, 0.75]]) {
+      const { p: pos, n } = bandAt(t, 0.03), st = mesh(starGeo(), shine);
+      st.scale.setScalar(sc); st.position.copy(pos).addScaledVector(n, 0.026 * sc);
+      st.lookAt(st.position.clone().add(V3(n.x * 0.4, n.y * 0.4, 1))); grp.add(st);
+    }
+    main.push(shine);
+    return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent: [], onColor: c => shine.emissive.set(c) };
+  } else if (p.style === 'ears') {            // cat ears on a headband
+    const m = fabric(0.6), pink = new THREE.MeshStandardMaterial({ color: '#ffc2d6', roughness: 0.6 });
+    grp.add(headband(m, 0.03));
+    const ear = cached('catear', () => { const g = new THREE.ConeGeometry(0.044, 0.088, 4, 1); g.rotateY(Math.PI / 4); g.scale(1, 1, 0.42); g.translate(0, 0.044, 0); return g; });
+    const inner = cached('catearin', () => { const g = new THREE.ConeGeometry(0.027, 0.056, 4, 1); g.rotateY(Math.PI / 4); g.scale(1, 1, 0.3); g.translate(0, 0.031, 0.008); return g; });
+    for (const t of [-0.62, 0.62]) {
+      const { p: pos, n } = bandAt(t, 0.03), e = new THREE.Group();
+      e.position.copy(pos); e.quaternion.setFromUnitVectors(V3(0, 1, 0), n);       // stand up along the head
+      e.add(mesh(ear, m), mesh(inner, pink)); grp.add(e);
+    }
+    main.push(m);
+  } else if (p.style === 'antennae') {        // alien antennae with glowing balls
+    const stalk = new THREE.MeshStandardMaterial({ color: '#2a2a33', roughness: 0.4 }), ball = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.25, emissiveIntensity: 0.3 });
+    grp.add(headband(stalk, 0.03));
+    for (const s of [-1, 1]) {
+      const { p: pos, n } = bandAt(s * 0.42, 0.03);
+      const mid = pos.clone().addScaledVector(n, 0.055).add(V3(s * 0.004, 0, 0.01)), tip = pos.clone().addScaledVector(n, 0.105).add(V3(s * 0.035, 0, 0.012));
+      grp.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([pos, mid, tip]), 16, 0.0042, 6), stalk));
+      const b = mesh(cached('antball', () => new THREE.SphereGeometry(0.02, 16, 12)), ball); b.position.copy(tip); grp.add(b);
+    }
+    main.push(ball);
+    return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent: [], onColor: c => ball.emissive.set(c) };
+  } else if (p.style === 'cowboy') {          // cowgirl hat: creased crown, brim curled up at the sides
+    const m = fabric(0.75); m.side = THREE.DoubleSide;
+    grp.add(mesh(cached('cowboyhat', () => {
+      const P = [[0.3, -0.006], [0.25, -0.004], [0.2, -0.002], [0.168, 0.0], [0.163, 0.05], [0.155, 0.1], [0.135, 0.13], [0.08, 0.138], [0.03, 0.128], [0.0005, 0.125]];
+      const curve = new THREE.CatmullRomCurve3(P.map(q => V3(q[0], q[1], 0)), false, 'centripetal');
+      const prof = []; for (let i = 0; i <= 70; i++) { const q = curve.getPoint(i / 70); prof.push(new THREE.Vector2(Math.max(0.0005, q.x), q.y)); }
+      const g = new THREE.LatheGeometry(prof, 72), pos = g.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i), r = Math.hypot(x, z), side = (x / (r || 1)) ** 2, b = smooth(0.17, 0.3, r);
+        pos.setY(i, y + b * (0.085 * side - 0.012 * (1 - side)) - 0.026 * Math.exp(-((x / 0.04) ** 2)) * smooth(0.1, 0.13, y));
+      }
+      return smoothSeams(g);
+    }), m));
+    const band = mesh(cached('cowboyband', () => new THREE.CylinderGeometry(0.17, 0.172, 0.022, 48, 1, true)), fabric(0.5));   // just outside the crown
+    band.position.y = 0.013; band.material.side = THREE.DoubleSide; grp.add(band);
+    accent.push(band.material);
+    grp.position.set(0, 0.11, -0.012); grp.rotation.set(-0.12, 0, 0);
+    main.push(m);
+    return { parts: [{ bone: 'headC', obj: grp }], main, inner: [], accent, accentShade: -0.4, fit: { obj: grp, c: [0, 0, 0], r: [0.15, 0.088, 0.15] } };   // low enough to stay under the crease
+  } else if (p.style === 'chef') {            // a puffy chef's hat
+    const m = fabric(0.85); m.side = THREE.DoubleSide;
+    const band = mesh(cached('chefband', () => new THREE.CylinderGeometry(0.172, 0.17, 0.075, 48, 1, true)), m); band.position.y = 0.0375; grp.add(band);
+    grp.add(mesh(cached('cheftop', () => {
+      const P = [[0.17, 0.07], [0.205, 0.12], [0.215, 0.18], [0.2, 0.24], [0.14, 0.275], [0.06, 0.285], [0.0005, 0.286]];
+      const curve = new THREE.CatmullRomCurve3(P.map(q => V3(q[0], q[1], 0)), false, 'centripetal');
+      const prof = []; for (let i = 0; i <= 40; i++) { const q = curve.getPoint(i / 40); prof.push(new THREE.Vector2(Math.max(0.0005, q.x), q.y)); }
+      const g = new THREE.LatheGeometry(prof, 64), pos = g.attributes.position;
+      for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i), k = 1 + 0.05 * Math.sin(8 * Math.atan2(x, z)) * smooth(0.09, 0.2, y); pos.setXYZ(i, x * k, y, z * k); }
+      return smoothSeams(g);
+    }), m));
+    grp.position.set(0, 0.075, -0.012); grp.rotation.set(-0.1, 0, 0);
+    main.push(m);
+    fit = { obj: grp, c: [0, 0, 0], r: [0.16, 0.18, 0.16] };
+  } else if (p.style === 'bonnet') {          // a puffy satin sleep bonnet with a ruffle
+    const m = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.35, sheen: 1, sheenRoughness: 0.4, side: THREE.DoubleSide });
+    grp.add(mesh(cached('bonnet', () => {
+      const g = new THREE.SphereGeometry(0.235, 48, 24, 0, TAU, 0, Math.PI * 0.55), pos = g.attributes.position;
+      for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), k = 1 + 0.03 * Math.sin(12 * Math.atan2(x, z)) * smooth(-0.02, 0.12, y); pos.setXYZ(i, x * k, y, z * k); }
+      g.scale(1, 0.9, 1.06); g.computeVertexNormals(); return g;
+    }), m));
+    grp.add(mesh(cached('bonnetruffle', () => gridGeo(120, 4, (u, v, out) => {
+      const a = u * TAU, w = 0.007 * Math.sin(26 * a) * v;
+      out.set(Math.sin(a) * (0.232 + 0.03 * v + w), -0.034 - 0.022 * v, Math.cos(a) * (0.246 + 0.03 * v + w));
+    })), m));
+    grp.position.set(0, 0.06, -0.025); grp.rotation.set(-0.22, 0, 0);
+    main.push(m);
+    fit = { obj: grp, c: [0, -0.034, 0], r: [0.21, 0.225, 0.225], blend: 0.035 };
   } else if (p.style === 'party') {           // cone party hat with a pom-pom
     const m = fabric(0.45), white = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8 });
     const cone = mesh(cached('partycone', () => { const g = new THREE.ConeGeometry(0.075, 0.2, 32, 1, true); g.translate(0, 0.1, 0); return g; }), m); m.side = THREE.DoubleSide; grp.add(cone);
@@ -197,6 +308,19 @@ export function buildHat(p) {
 
 /* ---------------- necklaces ---------------- */
 export function buildNecklace(p) {
+  if (p.style === 'bandana') {                // a triangle scarf tied round the neck
+    const m = fabric(0.7), grp = new THREE.Group(), r = ringAt(CHEST_KEYS, 0.33);
+    const wrap = mesh(cached('bandanawrap', () => { const g = new THREE.TorusGeometry(0.074, 0.013, 10, 40); g.rotateX(Math.PI / 2); g.scale(1.12, 1, 1.05); return g; }), m);
+    wrap.position.set(0, 0.338, r.zo + 0.004); grp.add(wrap);
+    const tri = mesh(cached('bandanatri', () => {
+      const sh = new THREE.Shape(); sh.moveTo(-0.08, 0); sh.lineTo(0.08, 0); sh.quadraticCurveTo(0.02, -0.06, 0, -0.105); sh.quadraticCurveTo(-0.02, -0.06, -0.08, 0);
+      const g = new THREE.ExtrudeGeometry(sh, { depth: 0.004, bevelEnabled: true, bevelSize: 0.003, bevelThickness: 0.002, bevelSegments: 1 });
+      const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 5, uv.getY(i) * 5);   // shape units are tiny: scale up so prints look right
+      return g;
+    }), m);
+    tri.position.set(0, 0.335, r.zo + r.rz + 0.012); tri.rotation.x = -0.32; grp.add(tri);
+    return { parts: [{ bone: 'breath', obj: grp }], main: [m], inner: [], accent: [] };
+  }
   if (p.style === 'scarf') {                  // chunky knit scarf: a wrap round the neck + two hanging ends
     const m = fabric(0.95), grp = new THREE.Group();
     const r = ringAt(CHEST_KEYS, 0.33);

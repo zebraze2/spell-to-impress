@@ -2,10 +2,10 @@
    Returns colliders and "interactables" (things you can walk up to and use). */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { V3 } from './util.js?v=8bebf9f5';
-import { TEX } from './textures.js?v=8bebf9f5';
-import { M, makePalm, makeSconce, makeChandelier, makeSalonChair, makeVanity, makePouf, makeRunwayDoors, makeMirror } from './props.js?v=8bebf9f5';
-import { CATALOG, WINGS, makeDisplay } from './catalog.js?v=8bebf9f5';
+import { V3 } from './util.js?v=36d70f72';
+import { TEX } from './textures.js?v=36d70f72';
+import { M, makePalm, makeSconce, makeChandelier, makeSalonChair, makeVanity, makePouf, makeRunwayDoors, makeMirror } from './props.js?v=36d70f72';
+import { CATALOG, WINGS, makeDisplay } from './catalog.js?v=36d70f72';
 
 export const ROOM = { x0: -7, x1: 7, z0: -5.5, z1: 5.5, h: 4.8 };
 const rbox = (w, h, d, r = 0.02) => new RoundedBoxGeometry(w, h, d, 2, r);

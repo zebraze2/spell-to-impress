@@ -2,8 +2,8 @@
    Rigid parts swing at the joints, like Roblox avatars, so a procedural walk works with any outfit.
    The same body (black, no face) is the shop mannequin. */
 import * as THREE from 'three';
-import { TAU, lerp, clamp, smooth, V3, smoothSeams, cached, crSample, bodyLathe, limbLathe, gridGeo } from './util.js?v=8bebf9f5';
-import { FACE, faceTextures, faceParams, LOOKS } from './face.js?v=8bebf9f5';
+import { TAU, lerp, clamp, smooth, V3, smoothSeams, cached, crSample, bodyLathe, limbLathe, gridGeo } from './util.js?v=36d70f72';
+import { FACE, faceTextures, faceParams, LOOKS } from './face.js?v=36d70f72';
 
 /* ---------------- body geometry (shared by every doll) ---------------- */
 export function headShape(x, y, z, out, inflate = 0) {

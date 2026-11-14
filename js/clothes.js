@@ -1,8 +1,8 @@
 /* Clothing items. An item = meshes on named bones + "dyeable" materials.
    item.setColor(hex, print) recolours it (prints are regenerated from the base colour). */
 import * as THREE from 'three';
-import { printTex } from './textures.js?v=8bebf9f5';
-import { shade } from './util.js?v=8bebf9f5';
+import { printTex } from './textures.js?v=36d70f72';
+import { shade } from './util.js?v=36d70f72';
 
 export const SLOTS = ['dress', 'top', 'bottom', 'shoes', 'head', 'neck', 'hands'];
 

@@ -36,28 +36,46 @@ kokoro = Kokoro(os.path.join(MODELS, 'kokoro-v1.0.onnx'), os.path.join(MODELS, '
 tok = Tokenizer()
 IPA_FIX = {'ɝ': 'ɜɹ'}
 # said-alone pronunciations, stressed the way a teacher says a dictation word
-PRON = {'does': 'dˈʌz.', 'brick': 'bɹˈɪk.', 'chick': 'tʃˈɪk.', 'dish': 'dˈɪʃ.', 'peach': 'pˈitʃ.', 'to': 'tˈuː.', 'snowman': 'snˈoʊmˌæn.', 'cup': 'kˈʌp.', 'pot': 'pˈɑːt.', 'five': 'fˈaɪv.', 'the': 'ðˈʌ.', 'of': 'ˈʌv.', 'puff': 'pˈʌf.'}
+PRON = {'does': 'dˈʌz.', 'brick': 'bɹˈɪk.', 'chick': 'tʃˈɪk.', 'dish': 'dˈɪʃ.', 'peach': 'pˈitʃ.', 'to': 'tˈuː.', 'snowman': 'snˈoʊmˌæn.', 'cup': 'kˈʌp.', 'pot': 'pˈɑːt.', 'five': 'fˈaɪv.', 'the': 'ðˈʌ.', 'of': 'ˈʌv.', 'puff': 'pˈʌf.',
+        'blouse': 'blˈWs.', 'pretest': 'pɹˈitˌɛst.'}
+
+# Kokoro learned the oy sound as one symbol, Y (its own phoneme set). The phonemizer writes it as two letters, ɔɪ,
+# which this voice says like "eye" (boy -> "bye", toy -> "tie", royal -> "rile"), so hand it the symbol it knows.
+# An unstressed oy (the boy in cowboy) still drifts toward "bite", so give it light stress, as English speakers do.
+def fix_ph(ph): return re.sub(r'(?<![ˈˌ])ɔɪ', 'ˌY', ph).replace('ɔɪ', 'Y')
+def say_ph(text): return fix_ph(tok.phonemize(text, 'en-us'))
 
 def speed_for(cid):
     if cid.startswith('w_'): return 1.0    # slowing single words down distorts them (checked with Whisper)
     if cid.startswith('s_'): return 0.9
     return 0.95
 
+# How a target word is said inside its own "Spell ___." and sentence clips, where the phonemizer gets it wrong in
+# context (the un- of unlock swallowed after "Spell", pretest heard as "protest"). Only the clip's own word changes.
+CTX = {'unlock': 'ˌʌnlˈɑːk', 'untie': 'ˌʌntˈaɪ', 'unwrap': 'ˌʌnɹˈæp', 'unplug': 'ˌʌnplˈʌɡ',
+       'pretest': 'pɹˈitˌɛst', 'precut': 'pɹˈikˌʌt', 'coats': 'kˈoʊtts'}
+
+def ctx_ph(word, text):
+    ph, wp = tok.phonemize(text, 'en-us'), tok.phonemize(word, 'en-us')
+    return fix_ph(ph.replace(wp, CTX[word]) if wp in ph else ph)
+
 def synth(cid, text):
+    if cid[:2] in ('t_', 's_') and cid[2:] in CTX:
+        return kokoro.create(ctx_ph(cid[2:], text), voice=args.voice, speed=speed_for(cid), lang='en-us', is_phonemes=True)
     parts = re.split(r'\[\[([^|\]]*)\|[^\]]*\]\]', text)
     if cid.startswith('w_') and text in PRON:
-        return kokoro.create(PRON[text], voice=args.voice, speed=speed_for(cid), lang='en-us', is_phonemes=True)
+        return kokoro.create(fix_ph(PRON[text]), voice=args.voice, speed=speed_for(cid), lang='en-us', is_phonemes=True)
     if len(parts) == 1:
         # a lone word reads more naturally as a short statement
         say = text + '.' if cid.startswith('w_') else text
-        return kokoro.create(say, voice=args.voice, speed=speed_for(cid), lang='en-us')
+        return kokoro.create(say_ph(say), voice=args.voice, speed=speed_for(cid), lang='en-us', is_phonemes=True)
     ph = []
     for i, p in enumerate(parts):
         if i % 2:  # IPA
             for a, b in IPA_FIX.items(): p = p.replace(a, b)
-            ph.append(p if 'ˈ' in p else 'ˈ' + p)
+            ph.append(fix_ph(p if 'ˈ' in p else 'ˈ' + p))
         elif p.strip():
-            ph.append(tok.phonemize(p, 'en-us'))
+            ph.append(say_ph(p))
     return kokoro.create(' '.join(ph), voice=args.voice, speed=speed_for(cid), lang='en-us', is_phonemes=True)
 
 def tidy(s, sr):
@@ -90,14 +108,14 @@ def best_take(word, first, sr):
     if heard(first, sr) == word: return first
     if word in PRON:
         for sp in [0.95, 1.08, 0.9, 1.15, 0.85]:
-            s, _ = kokoro.create(PRON[word], voice=args.voice, speed=sp, lang='en-us', is_phonemes=True)
+            s, _ = kokoro.create(fix_ph(PRON[word]), voice=args.voice, speed=sp, lang='en-us', is_phonemes=True)
             if heard(s, sr) == word:
                 print(f'    {word}: using /{PRON[word]}/ @ {sp}', flush=True); return s
         print(f'    {word}: no variation passed, keeping /{PRON[word]}/', flush=True)
         return first
     for say, sp in [(word, 1.0), (word + '!', 1.0), (word + '.', 1.08), (word + '.', 0.95), (word.capitalize() + '.', 1.0),
                     (word + ',', 1.0), (word + '...', 1.0), (word + '.', 1.15)]:
-        s, _ = kokoro.create(say, voice=args.voice, speed=sp, lang='en-us')
+        s, _ = kokoro.create(say_ph(say), voice=args.voice, speed=sp, lang='en-us', is_phonemes=True)
         if heard(s, sr) == word:
             print(f'    {word}: using "{say}" @ {sp}', flush=True); return s
     print(f'    {word}: no variation passed, keeping the default', flush=True)

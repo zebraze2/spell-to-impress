@@ -1,6 +1,6 @@
 /* Canvas-painted textures: room surfaces, fabric prints (re-tintable), hair strands, sparkles. */
 import * as THREE from 'three';
-import { TAU, rng, canvasTex, hexA, shade } from './util.js?v=8bebf9f5';
+import { TAU, rng, canvasTex, hexA, shade } from './util.js?v=36d70f72';
 
 export const TEX = {};
 
@@ -200,10 +200,69 @@ function knit(base) {
   }, { repeat: [3, 3] });
 }
 
-export const PRINTS = ['solid', 'floral', 'dots', 'gingham', 'stripes', 'sparkle'];
+/* draw a motif at (x, y) and again across the tile edges, so prints repeat seamlessly */
+const wrapped = (w, x, y, draw) => { for (const ox of [-w, 0, w]) for (const oy of [-w, 0, w]) draw(x + ox, y + oy); };
+function starPath(g, x, y, r, rot) {
+  g.beginPath();
+  for (let k = 0; k < 10; k++) { const a = rot + k * Math.PI / 5, rr = k % 2 ? r * 0.45 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  g.closePath(); g.fill();
+}
+function stars(base) {
+  const col = new THREE.Color(base).getHSL({}).l > 0.65 ? shade(base, -0.4) : '#fff1b8';
+  return canvasTex(256, 256, (g, w) => {
+    const r = rng(7); g.fillStyle = base; g.fillRect(0, 0, w, w);
+    for (let i = 0; i < 170; i++) { g.fillStyle = `rgba(255,255,255,${.12 + r() * .35})`; g.fillRect(r() * w, r() * w, 1.5, 1.5); }
+    g.fillStyle = col;
+    for (const [x, y, sz] of [[40, 50, 15], [150, 30, 9], [212, 118, 14], [92, 148, 10], [30, 212, 9], [168, 208, 15], [118, 86, 6], [232, 232, 6]]) {
+      const rot = -Math.PI / 2 + (r() - 0.5) * 0.7; wrapped(w, x, y, (X, Y) => starPath(g, X, Y, sz, rot));
+    }
+  }, { repeat: [1, 1] });
+}
+function heartPath(g, x, y, sz) {
+  g.beginPath(); g.moveTo(x, y + sz * 0.9);
+  g.bezierCurveTo(x - sz * 1.25, y + sz * 0.05, x - sz * 0.7, y - sz * 0.95, x, y - sz * 0.35);
+  g.bezierCurveTo(x + sz * 0.7, y - sz * 0.95, x + sz * 1.25, y + sz * 0.05, x, y + sz * 0.9);
+  g.fill();
+}
+function hearts(base) {
+  const light = new THREE.Color(base).getHSL({}).l > 0.72;
+  const a = light ? shade(base, -0.3) : '#ffffff', b = light ? '#ffffff' : shade(base, 0.35);
+  return canvasTex(256, 256, (g, w) => {
+    g.fillStyle = base; g.fillRect(0, 0, w, w);
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { g.fillStyle = (x + y) % 2 ? b : a; wrapped(w, x * 64 + 32 + (y % 2) * 32, y * 64 + 32, (X, Y) => heartPath(g, X, Y, 12)); }
+  }, { repeat: [1, 1] });
+}
+function leopard(base) {
+  const dark = '#3b2a1e', mid = shade(base, -0.2);
+  return canvasTex(256, 256, (g, w) => {
+    const r = rng(13); g.fillStyle = base; g.fillRect(0, 0, w, w);
+    for (let i = 0; i < 24; i++) {
+      const x = r() * w, y = r() * w, sz = 8 + r() * 6, rot = r() * TAU, gaps = [r(), r(), r()];
+      wrapped(w, x, y, (X, Y) => {
+        g.save(); g.translate(X, Y); g.rotate(rot);
+        g.fillStyle = mid; g.beginPath(); g.ellipse(0, 0, sz, sz * 0.72, 0, 0, TAU); g.fill();
+        g.strokeStyle = dark; g.lineWidth = sz * 0.38; g.lineCap = 'round';           // a broken ring: a rosette
+        gaps.forEach((q, k) => { const a0 = k * TAU / 3 + q * 0.5; g.beginPath(); g.ellipse(0, 0, sz, sz * 0.72, 0, a0, a0 + 1.45); g.stroke(); });
+        g.restore();
+      });
+    }
+  }, { repeat: [1.5, 1.5] });
+}
+function plaid(base) {
+  const dk = shade(base, -0.38), lt = shade(base, 0.5);
+  return canvasTex(256, 256, (g, w) => {
+    g.fillStyle = base; g.fillRect(0, 0, w, w);
+    g.fillStyle = hexA(dk, 0.45); g.fillRect(0, 96, w, 64); g.fillRect(96, 0, 64, w);
+    g.fillStyle = hexA(dk, 0.3); g.fillRect(0, 0, w, 22); g.fillRect(0, 0, 22, w);
+    g.fillStyle = hexA(lt, 0.65); g.fillRect(0, 196, w, 6); g.fillRect(196, 0, 6, w);
+    g.fillStyle = hexA('#1d181f', 0.35); g.fillRect(0, 126, w, 4); g.fillRect(126, 0, 4, w);
+  }, { repeat: [1.5, 1.5] });
+}
+
+export const PRINTS = ['solid', 'floral', 'dots', 'gingham', 'stripes', 'sparkle', 'stars', 'hearts', 'leopard', 'plaid'];
 export function printTex(kind, base) {
   if (!kind || kind === 'solid') return null;
-  const fn = { floral, dots, gingham, stripes, sparkle: sparkleFabric, denim, knit }[kind];
+  const fn = { floral, dots, gingham, stripes, sparkle: sparkleFabric, denim, knit, stars, hearts, leopard, plaid }[kind];
   return fn ? mkPrint(kind + base, () => fn(base)) : null;
 }
 

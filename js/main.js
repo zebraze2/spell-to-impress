@@ -4,23 +4,23 @@
    Runway: every model walks, everyone votes 1–5 stars, top three take the podium, then results + the 80% unlock. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildRoom } from './room.js?v=8bebf9f5';
-import { buildDoll, animateDoll } from './doll.js?v=8bebf9f5';
-import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=8bebf9f5';
-import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=8bebf9f5';
-import { CATALOG, PALETTE, makeItem } from './catalog.js?v=8bebf9f5';
-import { PRINTS, TEX } from './textures.js?v=8bebf9f5';
-import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=8bebf9f5';
-import { makeRivals, updateRival, person, STARTER } from './ai.js?v=8bebf9f5';
-import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=8bebf9f5';
-import { LEVELS } from './words.js?v=8bebf9f5';
-import { buildRunway, makeShow, RW } from './runway.js?v=8bebf9f5';
-import { UI } from './ui.js?v=8bebf9f5';
+import { buildRoom } from './room.js?v=36d70f72';
+import { buildDoll, animateDoll } from './doll.js?v=36d70f72';
+import { LOOKS, LIP_COLORS, lookPreview } from './face.js?v=36d70f72';
+import { HAIR_STYLES, HAIR_COLORS, hairStyle, hairColor } from './hair.js?v=36d70f72';
+import { CATALOG, PALETTE, makeItem } from './catalog.js?v=36d70f72';
+import { PRINTS, TEX } from './textures.js?v=36d70f72';
+import { makeController, stepDoll, steerDir, collide, WALK_SPEED } from './player.js?v=36d70f72';
+import { makeRivals, updateRival, person, STARTER } from './ai.js?v=36d70f72';
+import { makeSession, PASS, MIN_TRIES, QUIZ_SIZE, loadProgress, saveProgress, resetProgress, quizSet, markWord, markQuizDone, levelStats, unlockedLevel, unlock } from './spell.js?v=36d70f72';
+import { LEVELS } from './words.js?v=36d70f72';
+import { buildRunway, makeShow, RW } from './runway.js?v=36d70f72';
+import { UI } from './ui.js?v=36d70f72';
 
 const QS = new URLSearchParams(location.search);
 // ?reset starts over, for play-testing on this computer only: the live site ignores it, so an old link can't wipe her progress
 if (QS.has('reset')) { if (location.hostname === 'localhost') resetProgress(); QS.delete('reset'); history.replaceState(null, '', location.pathname + (QS.toString() ? '?' + QS : '')); }
-const PLAYABLE = 7;                                   // levels built so far
+const PLAYABLE = 16;                                  // levels built so far
 const UNLOCKED = QS.has('unlock') ? PLAYABLE : Math.min(PLAYABLE, unlockedLevel());
 const LEVEL = Math.max(1, Math.min(UNLOCKED, Number(QS.get('level')) || loadProgress().last || 1)) - 1;
 const THEME_SETS = [
@@ -65,6 +65,60 @@ const THEME_SETS = [
     { name: 'Tennis Match', tags: ['tennis', 'sporty', 'school'], palette: ['#ffffff', '#6fcf97', '#ffd27a', '#86c9e8', '#f6a9c4'] },
     { name: 'Dance Class', tags: ['dance', 'cute', 'party', 'sporty'], palette: ['#f6a9c4', '#c9b3f2', '#1d181f', '#ffffff', '#f06aa0'] },
     { name: 'Field Trip', tags: ['school', 'casual', 'sporty'], palette: ['#7a8fd6', '#ffd27a', '#c43b3b', '#ffffff', '#6fcf97'] },
+  ],
+  [ // Starlight Wing (review)
+    { name: 'Pop Star', tags: ['popstar', 'glam', 'disco', 'party'], palette: ['#9b6ad8', '#f06aa0', '#c9d2e8', '#1d181f', '#ffd27a', '#ffffff'] },
+    { name: 'Concert Night', tags: ['popstar', 'glam', 'disco'], palette: ['#1d181f', '#c9d2e8', '#e0457b', '#9b6ad8', '#86c9e8'] },
+    { name: 'Music Video', tags: ['popstar', 'party', 'cute', 'glam'], palette: ['#ff8fb8', '#86c9e8', '#ffd27a', '#c9b3f2', '#ffffff'] },
+    { name: 'Sparkle Party', tags: ['disco', 'party', 'glam', 'birthday'], palette: ['#e9c48a', '#c9d2e8', '#f06aa0', '#ffffff', '#9b6ad8'] },
+  ],
+  [ // Space Wing
+    { name: 'Space Explorer', tags: ['space', 'sporty', 'casual'], palette: ['#ffffff', '#c9d2e8', '#5b7fc0', '#ff9a6a', '#1d181f'] },
+    { name: 'Galaxy Glam', tags: ['space', 'galaxy', 'glam', 'formal'], palette: ['#24306e', '#9b6ad8', '#c9d2e8', '#1d181f', '#3b2a66'] },
+    { name: 'Moon Dance', tags: ['space', 'galaxy', 'elegant', 'party'], palette: ['#c9d2e8', '#ffffff', '#9b6ad8', '#24306e', '#fff2d9'] },
+    { name: 'Alien Party', tags: ['space', 'alien', 'party', 'cute'], palette: ['#6fcf97', '#a8e2cc', '#9b6ad8', '#ffd27a', '#86c9e8'] },
+  ],
+  [ // Western Wing
+    { name: 'Rodeo', tags: ['western', 'casual', 'sporty'], palette: ['#7a4a32', '#c43b3b', '#e9c48a', '#5b7fc0', '#fff2d9'] },
+    { name: 'Country Fair', tags: ['western', 'casual', 'cute', 'picnic'], palette: ['#c43b3b', '#ffffff', '#86c9e8', '#ffd27a', '#f6a9c4'] },
+    { name: 'Hoedown', tags: ['western', 'party', 'dance'], palette: ['#7a4a32', '#e9c48a', '#c43b3b', '#24306e', '#fff2d9'] },
+    { name: 'Wild West', tags: ['western', 'casual'], palette: ['#7a4a32', '#3b2a26', '#e9c48a', '#c43b3b', '#ff9a6a'] },
+  ],
+  [ // Candy Wing
+    { name: 'Bake Sale', tags: ['candy', 'cute', 'casual', 'picnic'], palette: ['#ffb3d0', '#fff2d9', '#ffd27a', '#a8e2cc', '#ffffff'] },
+    { name: 'Candy Land', tags: ['candy', 'cute', 'party', 'birthday'], palette: ['#f06aa0', '#86c9e8', '#ffd27a', '#c9b3f2', '#a8e2cc'] },
+    { name: 'Ice Cream Party', tags: ['candy', 'party', 'summer', 'cute'], palette: ['#ffb3d0', '#a8e2cc', '#fff2d9', '#86c9e8', '#c9b3f2'] },
+    { name: 'Tea Party', tags: ['candy', 'elegant', 'garden', 'coquette', 'cute'], palette: ['#f6a9c4', '#ffffff', '#c9b3f2', '#a8e2cc', '#e9c48a'] },
+  ],
+  [ // Sleepover Wing (review)
+    { name: 'Sleepover', tags: ['pajama', 'cozy', 'cute'], palette: ['#c9b3f2', '#ffb3d0', '#86c9e8', '#ffffff', '#a8e2cc'] },
+    { name: 'Movie Night', tags: ['pajama', 'cozy', 'casual'], palette: ['#24306e', '#c43b3b', '#fff2d9', '#ffd27a', '#c9b3f2'] },
+    { name: 'Pillow Fight', tags: ['pajama', 'cute', 'party'], palette: ['#ffb3d0', '#ffffff', '#f06aa0', '#ffd27a', '#86c9e8'] },
+    { name: 'Bedtime Story', tags: ['pajama', 'cozy', 'fairytale'], palette: ['#c9b3f2', '#24306e', '#fff2d9', '#86c9e8', '#e9c48a'] },
+  ],
+  [ // Safari Wing
+    { name: 'Safari Trip', tags: ['safari', 'casual', 'sporty'], palette: ['#e9c48a', '#7a4a32', '#6fcf97', '#fff2d9', '#3b2a26'] },
+    { name: 'Jungle Party', tags: ['safari', 'jungle', 'party', 'tropical'], palette: ['#6fcf97', '#ff9a6a', '#ffd27a', '#e0457b', '#7a4a32'] },
+    { name: 'Zoo Day', tags: ['safari', 'casual', 'cute', 'school'], palette: ['#ffd27a', '#6fcf97', '#86c9e8', '#ff9a6a', '#ffffff'] },
+    { name: 'Wild Glam', tags: ['safari', 'glam', 'party'], palette: ['#e9c48a', '#1d181f', '#c43b3b', '#7a4a32', '#fff2d9'] },
+  ],
+  [ // Ocean Wing
+    { name: 'Under the Sea', tags: ['ocean', 'mermaid', 'cute'], palette: ['#6fcfc4', '#86c9e8', '#c9b3f2', '#a8e2cc', '#ff9a6a'] },
+    { name: 'Mermaid Lagoon', tags: ['mermaid', 'ocean', 'glam', 'elegant'], palette: ['#6fcfc4', '#9b6ad8', '#c9d2e8', '#a8e2cc', '#f06aa0'] },
+    { name: 'Seashell Party', tags: ['ocean', 'party', 'beach', 'summer'], palette: ['#fff2d9', '#ffb3d0', '#ff9a6a', '#86c9e8', '#ffffff'] },
+    { name: 'Ocean Explorer', tags: ['ocean', 'sporty', 'beach', 'casual'], palette: ['#5b7fc0', '#24306e', '#ffd27a', '#ffffff', '#6fcfc4'] },
+  ],
+  [ // Autumn Wing
+    { name: 'Pumpkin Patch', tags: ['autumn', 'cozy', 'casual'], palette: ['#ff9a6a', '#7a4a32', '#e9c48a', '#c43b3b', '#fff2d9'] },
+    { name: 'Apple Picking', tags: ['autumn', 'casual', 'picnic', 'cute'], palette: ['#c43b3b', '#6fcf97', '#e9c48a', '#7a4a32', '#fff2d9'] },
+    { name: 'Fall Festival', tags: ['autumn', 'party', 'cozy'], palette: ['#ff9a6a', '#c43b3b', '#ffd27a', '#7a4a32', '#3b2a26'] },
+    { name: 'Cozy Cafe', tags: ['autumn', 'cozy', 'school', 'elegant'], palette: ['#7a4a32', '#e9c48a', '#fff2d9', '#3b2a26', '#c9b3f2'] },
+  ],
+  [ // Fashion Week Wing (review)
+    { name: 'Fashion Week', tags: ['runway', 'glam', 'elegant', 'formal'], palette: ['#1d181f', '#ffffff', '#c43b3b', '#e9c48a', '#c9d2e8'] },
+    { name: 'Superstar', tags: ['runway', 'popstar', 'glam', 'disco'], palette: ['#e9c48a', '#9b6ad8', '#f06aa0', '#c9d2e8', '#1d181f'] },
+    { name: 'Dream Gown', tags: ['runway', 'royal', 'formal', 'fairytale'], palette: ['#c9b3f2', '#f6a9c4', '#ffffff', '#86c9e8', '#e9c48a'] },
+    { name: 'Street Style', tags: ['runway', 'casual', 'sporty', 'popstar'], palette: ['#1d181f', '#c43b3b', '#ffffff', '#5b7fc0', '#ffd27a'] },
   ],
 ];
 const THEMES = THEME_SETS[LEVEL];
@@ -299,8 +353,8 @@ function results(ranked) {
     if (pass) unlock(LEVEL + 2);
     const title = place === 1 ? 'You won 1st place!' : place <= 3 ? `You placed ${ordinal(place)}!` : `You placed ${ordinal(place)}`;
     const text = `The judges gave your ${THEME.name} look <b>★ ${mine.avg.toFixed(1)}</b>.<br>You spelled <b>${session.firstRight}</b> of <b>${session.firstTries}</b> right on the first try: <b>${pct}%</b>.`;
-    const built = LEVEL + 2 <= PLAYABLE;
-    const next = pass ? (built ? `You unlocked the <b>${LEVELS[LEVEL + 1].wing}</b>!` : 'You passed every wing that is open so far. More wings are coming!')
+    const built = LEVEL + 2 <= PLAYABLE, finale = LEVEL + 1 === LEVELS.length;
+    const next = pass ? (built ? `You unlocked the <b>${LEVELS[LEVEL + 1].wing}</b>!` : finale ? 'You passed every wing in the boutique. You are a spelling superstar!' : 'You passed every wing that is open so far. More wings are coming!')
       : !enough ? `Spell at least ${MIN_TRIES} words in a round (and get 80% right) to unlock the next wing.`
       : 'Spell 80% right on the first try to unlock the next wing. You can do it!';
     const buttons = [['Play again', () => goLevel(LEVEL + 1), pass && built]];
