@@ -1,0 +1,2 @@
+# never publish local env files (vercel link writes a token into .env.local)
+.env*
