@@ -3,6 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<script>
+/* Spell to Impress moved from zebraze2.github.io/spell-to-impress to bregan.org/impress on 2026-11-24.
+   Saved progress belongs to a site's address, so the old address hands each browser's progress over in the
+   link's #carry= part (browsers never send that part to a server), and it is merged in here before the game
+   reads it. A browser that opens this address first, with nothing saved, visits the old address once to
+   collect anything saved there. Merging only fills gaps: nothing already saved here is lowered or removed. */
+(function () {
+  var KEY = 'sti-progress-v3', ASKED = 'sti-carry-asked';
+  try {
+    var m = /^#carry=([\w-]+)$/.exec(location.hash);
+    if (m) {
+      var bin = atob(m[1].replace(/-/g, '+').replace(/_/g, '/'));
+      var inc = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, function (c) { return c.charCodeAt(0); })));
+      localStorage.setItem(KEY, JSON.stringify(merge(JSON.parse(localStorage.getItem(KEY)), inc)));
+      localStorage.setItem(ASKED, '1');
+      history.replaceState(null, '', location.pathname + location.search);
+    } else if (location.hostname === 'bregan.org' && Date.now() < Date.UTC(2027, 2, 1) &&
+               !localStorage.getItem(KEY) && !localStorage.getItem(ASKED)) {
+      localStorage.setItem(ASKED, '1');                    // ask only once, so this can never loop
+      if (localStorage.getItem(ASKED)) location.replace('https://zebraze2.github.io/spell-to-impress/');
+    }
+  } catch (e) { /* storage blocked or a damaged link: just start the game */ }
+
+  function obj(x) { return x && typeof x === 'object' && !Array.isArray(x) ? x : null; }
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function ok(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+  function merge(cur, inc) {
+    cur = obj(cur) || {}; inc = obj(inc) || {};
+    var levels = cur.levels = obj(cur.levels) || {}, had = Object.keys(levels).length > 0, from = obj(inc.levels) || {};
+    Object.keys(from).filter(ok).forEach(function (id) {
+      var a = obj(from[id]), w = a && obj(a.words) || {};
+      if (!a) return;
+      var L = levels[id] = obj(levels[id]) || { quiz: false, words: {} };
+      L.words = obj(L.words) || {};
+      if (a.quiz === true) L.quiz = true;
+      Object.keys(w).filter(ok).forEach(function (k) {
+        if (!own(L.words, k) && [-1, 0, 1, 2].indexOf(w[k]) >= 0) L.words[k] = w[k];
+      });
+    });
+    var u = Math.floor(Number(inc.unlocked)), last = Math.floor(Number(inc.last));
+    if (u > 0) cur.unlocked = Math.max(Math.floor(Number(cur.unlocked)) || 1, u);
+    if (last > 0 && (!had || !cur.last)) cur.last = last;
+    return cur;
+  }
+})();
+</script>
 <title>Spell to Impress</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
